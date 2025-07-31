@@ -104,7 +104,7 @@ namespace Dessentials.Features.ABTesting
 		    FetchedValue = DefaultValue;
 	    }
 
-	    public T GetGuranteedValue()
+	    public T GetGuaranteedValue()
 	    {
 		    if (!fetched)
 		    {

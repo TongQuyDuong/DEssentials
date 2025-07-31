@@ -26,6 +26,11 @@ namespace Dessentials.Features.ABTesting
 			}
 						
 			IRemoteConfigValueProvider.Global.OnFetched += OnRemoteConfigFetched;
+			
+			foreach (var test in m_ABTests)
+			{
+				test.Init();
+			}
         }
 
 		private void OnRemoteConfigFetched()
