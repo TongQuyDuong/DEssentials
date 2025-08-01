@@ -16,10 +16,10 @@ namespace Dessentials.Common.UI
     {
         [Header("Config")]
         [SerializeField]
-        private bool _autoInitOnStart = false;
+        private bool _autoInitOnAwake = false;
         [SerializeField]
 #if ODIN_INSPECTOR
-        [ShowIf(nameof(_autoInitOnStart))]
+        [ShowIf(nameof(_autoInitOnAwake))]
 #endif
         private int _initialBarCount = 2;
         
@@ -33,18 +33,18 @@ namespace Dessentials.Common.UI
 
         private List<GameObject> _activeBarDividers = new();
         
-        private void Start()
+        private void Awake()
         {
-            if (_autoInitOnStart)
+            if (_autoInitOnAwake)
             {
                 InitBarCount(_initialBarCount);
             }
         }
 
-        public virtual void InitBarCount(int count)
+        public virtual void InitBarCount(int count, bool setFillMax = false)
         {
             _barSlider.maxValue = count;
-            _barSlider.value = count;
+            _barSlider.value = setFillMax ? count : 0;
 
             if (_activeBarDividers.Count < count)
             {
