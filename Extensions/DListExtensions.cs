@@ -123,5 +123,67 @@ namespace Dessentials.Extensions
             }
             return maxElement;
         }
+        
+        public static List<List<T>> DivideEqually<T>(this List<T> list, int numberOfSubLists)
+        {
+            if (list == null || list.Count == 0)
+            {
+                Debug.LogWarning("Input list is empty. Nothing to divide.");
+                return new List<List<T>>();
+            }
+
+            if (numberOfSubLists <= 0)
+            {
+                Debug.LogError("Number of sub-lists must be greater than 0.");
+                return new List<List<T>>();
+            }
+
+            // Clear previous results
+            var result = new List<List<T>>(numberOfSubLists);
+
+            // Initialize the sub-list wrappers
+            for (int i = 0; i < numberOfSubLists; i++)
+            {
+                result.Add(new List<T>());
+            }
+
+            // --- Alternative Logic (Fill one sub-list, then the next) ---
+            int itemsPerSubListBase = list.Count / numberOfSubLists;
+            int remainderItems = list.Count % numberOfSubLists;
+            int currentInputIndex = 0;
+
+            for (int i = 0; i < numberOfSubLists; i++) // Iterate through each sub-list to populate
+            {
+                // Determine how many items this sub-list gets
+                int itemsInThisSubList = itemsPerSubListBase;
+                if (remainderItems > 0)
+                {
+                    itemsInThisSubList++;
+                    remainderItems--; // Decrement remainder for next lists
+                }
+
+                // Populate the current sub-list (dividedLists[i])
+                for (int j = 0; j < itemsInThisSubList; j++)
+                {
+                    if (currentInputIndex < list.Count) // Ensure we don't go out of bounds of inputList
+                    {
+                        // Optionally skip null entries from the input list, or include them
+                        // if (inputList[currentInputIndex] != null) // If you want to skip nulls
+                        // {
+                        result[i].Add(list[currentInputIndex]);
+                        // }
+                        currentInputIndex++;
+                    }
+                    else
+                    {
+                        break; // No more items in input list to distribute
+                    }
+                }
+            }
+
+            Debug.Log($"Input list of {list.Count} items divided into {numberOfSubLists} sub-lists using sequential fill logic.");
+
+            return result;
+        }
     }
 }
