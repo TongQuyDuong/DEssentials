@@ -33,6 +33,9 @@ namespace Dessentials.Common.UI
 
         private List<GameObject> _activeBarDividers = new();
         
+        public float CurrentFill
+            => _barSlider.value;
+
         private void Awake()
         {
             if (_autoInitOnAwake)
