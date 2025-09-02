@@ -185,5 +185,21 @@ namespace Dessentials.Extensions
 
             return result;
         }
+        
+        public static string ToJson<T>(List<T> list)
+        {
+            var wrapper = new ListWrapper<T>();
+            wrapper.list = list;
+            string json = JsonUtility.ToJson(wrapper);
+            json = json.Remove(0, 8);
+            json = json.Remove(json.Length - 1);
+            return json;
+        }
+        
+        [Serializable]
+        private class ListWrapper<T>
+        {
+            public List<T> list;
+        }
     }
 }

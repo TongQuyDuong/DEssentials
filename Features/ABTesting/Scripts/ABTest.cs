@@ -119,6 +119,11 @@ namespace Dessentials.Features.ABTesting
 	    {
 		    DefaultValue = GetValueFromString(value);
 	    }
+
+	    public void ImportDefaultValue(T value)
+	    {
+		    DefaultValue = value;
+	    }
 	    
 	    [Button]
 	    public void PrintJson()
