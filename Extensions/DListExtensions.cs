@@ -8,6 +8,35 @@ namespace Dessentials.Extensions
 {
     public static class ListExtensions
     {
+        public static T GetRandomFromList<T>(this List<T> list)
+        {
+            if (list.Count == 0) return default(T);
+            
+            UnityEngine.Random.InitState(Guid.NewGuid().GetHashCode());
+
+            T random = list[UnityEngine.Random.Range(0, list.Count)];
+            return random;
+        }
+
+        public static T GetRandomFromListWithProrityPredicates<T>(this List<T> list, params Predicate<T>[] predicates)
+        {
+            if (list.Count == 0) return default(T);
+            if (predicates == null || predicates.Length == 0) return list.GetRandomFromList();
+
+            for (int i = 0; i < predicates.Length; i++)
+            {
+                var predicateList = predicates.TakeLast(predicates.Length - i);
+                
+                var tempList = list.Where(item => predicateList.All(predicate => predicate(item))).ToList();
+                if (tempList.Count > 0)
+                {
+                    return tempList.GetRandomFromList();
+                }
+            }
+            
+            return list.GetRandomFromList();
+        }
+        
         public static int RemoveNullElements<T>(this List<T> list, bool logResults = true) where T : UnityEngine.Object
         {
             if (list == null)
