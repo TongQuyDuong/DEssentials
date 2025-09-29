@@ -124,12 +124,17 @@ namespace Dessentials.Features.ABTesting
 	    {
 		    DefaultValue = value;
 	    }
-	    
+
+#if UNITY_EDITOR
 	    [Button]
-	    public void PrintJson()
+	    public void CopyJsonToClipboard()
 	    {
-		    Debug.Log(JsonUtility.ToJson(DefaultValue, true));
+		    var textToCopy = JsonUtility.ToJson(DefaultValue, true);
+		    
+		    GUIUtility.systemCopyBuffer = textToCopy;
+		    Debug.Log("Text copied to clipboard: " + textToCopy);
 	    }
+#endif
 			
 	    private T GetValueFromString(string serializedValue)
 	    {
