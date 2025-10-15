@@ -40,7 +40,7 @@ namespace Dessentials.Features.ABTesting
 	    {
 		    get
 		    {
-			    if (!enable)
+			    if (!enable || !Application.isPlaying)
 			    {
 				    return DefaultValue;
 			    }
