@@ -129,7 +129,7 @@ namespace Dessentials.Features.ABTesting
 	    [Button]
 	    public void CopyJsonToClipboard()
 	    {
-		    var textToCopy = JsonUtility.ToJson(DefaultValue, true);
+		    var textToCopy = JsonUtility.ToJson(DefaultValue, false);
 		    
 		    GUIUtility.systemCopyBuffer = textToCopy;
 		    Debug.Log("Text copied to clipboard: " + textToCopy);
