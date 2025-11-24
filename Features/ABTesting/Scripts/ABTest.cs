@@ -14,6 +14,7 @@ namespace Dessentials.Features.ABTesting
 	    void Fetch();
 	    void ResetDefaults();
 
+	    string FirebaseKey { get; }
 	    bool Enable { get; }
     }
     
@@ -49,6 +50,8 @@ namespace Dessentials.Features.ABTesting
 		    }
 	    }
 
+	    public string FirebaseKey => firebaseKey;
+	    
 	    public bool Enable => enable;
 
 	    public bool fetched;
