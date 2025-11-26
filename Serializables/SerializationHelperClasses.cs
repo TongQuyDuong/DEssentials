@@ -2,11 +2,39 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 
 namespace Dessentials.Serializables
 {
+    public static class SerializationExtensions
+    {
+#if ODIN_INSPECTOR
+        public static ValueDropdownList<string> ValueDropdownListFromEnum<TEnum>()
+            where TEnum : struct, Enum
+        {
+            var result = new ValueDropdownList<string>();
+
+            if (!typeof(TEnum).IsEnum)
+            {
+                Debug.LogError($"{typeof(TEnum).Name} is not an Enum");
+                return result;
+            }
+
+            var allEnums = Enum.GetNames(typeof(TEnum));
+
+            foreach (var val in allEnums)
+            {
+                result.Add(val, val);
+            }
+            
+            return result;
+        }
+#endif
+    }
+    
     [Serializable]
     public struct EnumTypedGameObject<TEnum> : IEquatable<EnumTypedGameObject<TEnum>> where TEnum : Enum
     {
