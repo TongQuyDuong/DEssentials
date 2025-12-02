@@ -13,6 +13,14 @@ namespace Dessentials.Features.ABTesting
 {
     public partial class ABTestManager : PersistentMonoSingleton<ABTestManager>
     {
+	    [TitleGroup("General")]
+	    [RegisteredABTest]
+	    [SerializeField]
+	    private ABTest<bool> _has_received_bucket;
+
+	    public bool HasReceivedBucket
+		    => _has_received_bucket.Value;
+	    
         private List<IABTest> m_ABTests = new();
         
 		protected override void Awake()
