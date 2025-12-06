@@ -24,6 +24,9 @@ namespace Dessentials.Common
                         s_instance = FindObjectOfType<T>();
                         if (s_instance == null)
                         {
+                            if (!Application.isPlaying)
+                                return null;
+                            
                             GameObject instanceGameObject = new GameObject();
                             s_instance = instanceGameObject.AddComponent<T>();
                             instanceGameObject.name = typeof(T).Name;
