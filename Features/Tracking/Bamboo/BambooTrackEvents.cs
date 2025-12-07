@@ -44,6 +44,8 @@ namespace Dessentials.Features.Tracking
         public double TotalIAPRevenue { get; }
         
         public double LTV => TotalAdsRevenue + TotalIAPRevenue;
+        
+        public double AdsIncementalValue { get; set; }
     }
     
     public abstract class BaseBambooTrackEvent
@@ -81,15 +83,10 @@ namespace Dessentials.Features.Tracking
             if (revenueDataProvider == null)
                 return;
             
-            var firebaseAnalytics = IFirebaseAnalytics.Global;
-            
-            if (firebaseAnalytics == null)
-                return;
-            
             m_eventTracked = true;
             IAlreadyTrackedEventsProvider.Global?.OnNewBambooEventTracked(EventName);
             
-            firebaseAnalytics.LogEvent(EventName, "ads_value", revenueDataProvider.LTV);
+            IFirebaseAnalytics.Global?.LogEvent(EventName, "ads_value", revenueDataProvider.LTV);
         }
     }
 }
