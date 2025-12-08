@@ -58,10 +58,25 @@ namespace Dessentials.Serializables
     }
 
     [Serializable]
-    public struct EnumTypedObject<TEnum, TObject> where TEnum : Enum
+    public struct EnumTypedObject<TEnum, TObject> : IEquatable<EnumTypedObject<TEnum, TObject>> where TEnum : Enum
     {
         public TEnum type;
         public TObject pairedObject;
+
+        public bool Equals(EnumTypedObject<TEnum, TObject> other)
+        {
+            return EqualityComparer<TEnum>.Default.Equals(type, other.type) && EqualityComparer<TObject>.Default.Equals(pairedObject, other.pairedObject);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is EnumTypedObject<TEnum, TObject> other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(type, pairedObject);
+        }
     }
     
     [Serializable]

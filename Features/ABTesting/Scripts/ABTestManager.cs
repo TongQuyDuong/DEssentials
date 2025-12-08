@@ -13,7 +13,9 @@ namespace Dessentials.Features.ABTesting
 {
     public partial class ABTestManager : PersistentMonoSingleton<ABTestManager>
     {
+#if ODIN_INSPECTOR
 	    [TitleGroup("General")]
+#endif
 	    [RegisteredABTest]
 	    [SerializeField]
 	    private ABTest<bool> _has_received_bucket;
