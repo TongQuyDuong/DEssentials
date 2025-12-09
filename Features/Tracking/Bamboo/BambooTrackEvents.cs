@@ -40,12 +40,13 @@ namespace Dessentials.Features.Tracking
     public interface IRevenueDataProvider : IGlobalService<IRevenueDataProvider>
     {
         public double FirstAdRevenue { get; }
-        public double TotalAdsRevenue { get; }
+        public double TotalAdsRevenue { get; set; }
         public double TotalIAPRevenue { get; }
         
         public double LTV => TotalAdsRevenue + TotalIAPRevenue;
         
-        public double AdsIncementalValue { get; set; }
+        public double AdsIncrementalValueSingleBidding { get; set; }
+        public double AdsIncrementalValueMultiBidding { get; set; }
     }
     
     public abstract class BaseBambooTrackEvent
