@@ -62,7 +62,7 @@ namespace Dessentials.Features.Tracking
             {
                 var trackedEventsProvider = IAlreadyTrackedEventsProvider.Global;
 
-                return trackedEventsProvider != null && trackedEventsProvider.AlreadyTrackedEvents.Contains(EventName);
+                return trackedEventsProvider != null && !trackedEventsProvider.AlreadyTrackedEvents.Contains(EventName);
             }
         }
 
