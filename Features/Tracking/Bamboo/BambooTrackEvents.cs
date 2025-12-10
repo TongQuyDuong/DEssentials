@@ -69,6 +69,8 @@ namespace Dessentials.Features.Tracking
         public virtual void InitTrackTask()
         {
             m_initialized = true;
+            
+            Debug.Log($"[BambooTracker] Start Tracking {EventName}");
         }
 
         //Called when all conditions are met for the first time, meant for inheritors to call
@@ -83,6 +85,8 @@ namespace Dessentials.Features.Tracking
             
             if (revenueDataProvider == null)
                 return;
+            
+            Debug.Log($"[BambooTracker] Firing {EventName}");
             
             m_eventTracked = true;
             IAlreadyTrackedEventsProvider.Global?.OnNewBambooEventTracked(EventName);
