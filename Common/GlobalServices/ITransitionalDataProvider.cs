@@ -14,6 +14,6 @@ namespace Dessentials.Common.GlobalServices
     /// </summary>
     public interface ITransitionalDataProvider : IGlobalService<ITransitionalDataProvider>
     {
-        public double CheatAdsRevenue { get; }
+        public double CheatIncrementalAdsRevenue { get; }
     }
 }
