@@ -139,8 +139,8 @@ namespace Dessentials.Features.Tracking
             AdsIncrementalData value = multiBidding[0];
             foreach (var data in multiBidding)
             {
-                incrementalCount++;
                 if (ltv < data.ltv) continue;
+                incrementalCount++;
                 value = data;
             }
 
