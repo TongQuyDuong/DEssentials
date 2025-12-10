@@ -17,7 +17,7 @@ namespace Dessentials.Helpers
 		}
 	}
 
-	public class TimeHelper
+	public class DTimeHelper
 	{
 		public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		private static StringBuilder m_TimeBuilder = new StringBuilder();
@@ -443,12 +443,12 @@ namespace Dessentials.Helpers
 	{
 		public static long ToUnixTimestamp(this DateTime value)
 		{
-			var elapsedTime = value - TimeHelper.Epoch;
+			var elapsedTime = value - DTimeHelper.Epoch;
 			return (long)elapsedTime.TotalSeconds;
 		}
 		public static int ToUnixTimestampInt(this DateTime value)
 		{
-			var elapsedTime = value - TimeHelper.Epoch;
+			var elapsedTime = value - DTimeHelper.Epoch;
 			return (int)elapsedTime.TotalSeconds;
 		}
 	}
