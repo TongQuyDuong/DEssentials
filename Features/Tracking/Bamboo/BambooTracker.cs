@@ -10,6 +10,8 @@ namespace Dessentials.Features.Tracking
 {
     public partial class BambooTracker : MonoBehaviour
     {
+        public static Action OnCheatFirstAdRevenueActivated;
+        
         private List<BaseBambooTrackEvent> m_bambooEvents = new();
 
         private void Awake()
@@ -26,6 +28,13 @@ namespace Dessentials.Features.Tracking
             var gameInitializer = IGameInitializer.Global;
 
             gameInitializer?.RegisterOnPlayerDataInitialized(InitBambooEvents);
+
+            OnCheatFirstAdRevenueActivated += InitBambooEvents;
+        }
+
+        private void OnDestroy()
+        {
+            OnCheatFirstAdRevenueActivated -= InitBambooEvents;
         }
 
         private void InitBambooEvents()
