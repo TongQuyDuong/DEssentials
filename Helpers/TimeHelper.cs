@@ -1,19 +1,31 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using RCore;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace Dessentials.Helpers
 {
+	public static class StringBuilderExtension
+	{
+		public static StringBuilder Clear(this StringBuilder pBuilder)
+		{
+			pBuilder.Length = 0;
+			pBuilder.Capacity = 0;
+			return pBuilder;
+		}
+	}
+
 	public class TimeHelper
 	{
 		public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		private static StringBuilder _timeBuilder = new StringBuilder();
-		private static bool _hasInternet;
+		private static StringBuilder m_TimeBuilder = new StringBuilder();
+		private static bool m_HasInternet;
+		public static bool Cheat;
+		public static int DayCheat;
+		public static int HourCheat;
+		public static int MinuteCheat;
 
 		/// <summary>
 		/// d h m s
@@ -23,47 +35,47 @@ namespace Dessentials.Helpers
 			int split = 0;
 			if (seconds > 0)
 			{
-				_timeBuilder.Clear();
+				m_TimeBuilder.Clear();
 				var t = TimeSpan.FromSeconds(seconds);
 
 				if (t.Days > 0)
 				{
 					split++;
-					_timeBuilder.Append(t.Days).Append("d");
+					m_TimeBuilder.Append(t.Days).Append("d");
 				}
 
 				if ((t.Hours > 0 || t.Minutes > 0 || t.Seconds > 0) && split < pMaxSplits)
 				{
 					if (split > 0)
-						_timeBuilder.Append(" ");
+						m_TimeBuilder.Append(" ");
 
 					if (split > 0 || t.Hours > 0)
 					{
 						split++;
-						_timeBuilder.Append(t.Hours).Append("h");
+						m_TimeBuilder.Append(t.Hours).Append("h");
 					}
 
 					if ((t.Minutes > 0 || t.Seconds > 0) && split < pMaxSplits)
 					{
 						if (split > 0)
-							_timeBuilder.Append(" ");
+							m_TimeBuilder.Append(" ");
 
 						if (split > 0 || t.Minutes > 0)
 						{
 							split++;
-							_timeBuilder.Append(t.Minutes).Append("m");
+							m_TimeBuilder.Append(t.Minutes).Append("m");
 						}
 
 						if (t.Seconds > 0 && split < pMaxSplits)
 						{
 							if (split > 0)
-								_timeBuilder.Append(" ");
+								m_TimeBuilder.Append(" ");
 
-							_timeBuilder.Append(t.Seconds).Append("s");
+							m_TimeBuilder.Append(t.Seconds).Append("s");
 						}
 					}
 				}
-				return _timeBuilder.ToString();
+				return m_TimeBuilder.ToString();
 			}
 
 			return "";
@@ -79,7 +91,7 @@ namespace Dessentials.Helpers
 			int minutes = totalSeconds % 3600 / 60;
 			int secs = totalSeconds % 60;
 
-			_timeBuilder.Clear();
+			m_TimeBuilder.Clear();
 
 			// Format the time based on pMaxSplits
 			if (pMaxSplits >= 4)
@@ -87,19 +99,19 @@ namespace Dessentials.Helpers
 				// Include days if pMaxSplits >= 4
 				int days = totalHours / 24;
 				int hours = totalHours % 24;
-				_timeBuilder.Append(days.ToString()).Append('d').Append(hours.ToString()).Append(':').Append(minutes.ToString("D2")).Append(':').Append(secs.ToString("D2"));
+				m_TimeBuilder.Append(days.ToString()).Append('d').Append(hours.ToString()).Append(':').Append(minutes.ToString("D2")).Append(':').Append(secs.ToString("D2"));
 			}
 			else if (pMaxSplits == 3)
 			{
 				if (totalHours > 0)
 				{
 					// Format as total hours:MM:SS
-					_timeBuilder.Append(totalHours.ToString()).Append(':').Append(minutes.ToString("D2")).Append(':').Append(secs.ToString("D2"));
+					m_TimeBuilder.Append(totalHours.ToString()).Append(':').Append(minutes.ToString("D2")).Append(':').Append(secs.ToString("D2"));
 				}
 				else
 				{
 					// Only minutes and seconds if total hours are 0
-					_timeBuilder.Append(minutes.ToString()).Append(':').Append(secs.ToString("D2"));
+					m_TimeBuilder.Append(minutes.ToString()).Append(':').Append(secs.ToString("D2"));
 				}
 			}
 			else if (pMaxSplits == 2)
@@ -108,22 +120,22 @@ namespace Dessentials.Helpers
 				if (totalHours > 0)
 				{
 					// Include total hours if totalHours > 0
-					_timeBuilder.Append(totalHours.ToString()).Append(':').Append(minutes.ToString("D2"));
+					m_TimeBuilder.Append(totalHours.ToString()).Append(':').Append(minutes.ToString("D2"));
 				}
 				else
 				{
 					// Only minutes and seconds if total hours are 0
-					_timeBuilder.Append(minutes.ToString()).Append(':').Append(secs.ToString("D2"));
+					m_TimeBuilder.Append(minutes.ToString()).Append(':').Append(secs.ToString("D2"));
 				}
 			}
 			else
-				_timeBuilder.Append(seconds);
+				m_TimeBuilder.Append(seconds);
 
-			return _timeBuilder.ToString();
+			return m_TimeBuilder.ToString();
 		}
 		public static double GetSecondsTillMidNightUtc()
 		{
-			var utcNow = GetServerTimeUtc() ?? DateTime.UtcNow;
+			var utcNow = DateTime.UtcNow;
 			var secondsTillMidNight = GetSecondsTillMidNight(utcNow);
 			return secondsTillMidNight;
 		}
@@ -288,13 +300,25 @@ namespace Dessentials.Helpers
 				+ $"\n SortableDateTimePattern: \t {culture.DateTimeFormat.SortableDateTimePattern} \t {DateTime.Now.ToString(culture.DateTimeFormat.SortableDateTimePattern)}"
 				+ $"\n UniversalSortableDateTimePattern: \t {culture.DateTimeFormat.UniversalSortableDateTimePattern} \t {DateTime.Now.ToString(culture.DateTimeFormat.UniversalSortableDateTimePattern)}");
 		}
-
-		public static DateTime? GetServerTimeUtc() => WebRequestHelper.GetServerTimeUtc();
-
+		
 		public static DateTime GetNow(bool utcTime)
 		{
-			var utcNow = GetServerTimeUtc() ?? DateTime.UtcNow;
-			return utcTime ? utcNow : utcNow.ToLocalTime();
+			var utcNow = DateTime.UtcNow;
+			var date = utcTime ? utcNow : utcNow.ToLocalTime();
+
+			if (Cheat)
+			{
+				var daysOffset = DayCheat;
+				var hourOffset = HourCheat;
+				var minuteCheat = MinuteCheat;
+				if (daysOffset > 0)
+					date = date.AddDays(daysOffset);
+				if (hourOffset > 0)
+					date = date.AddHours(hourOffset);
+				if (minuteCheat > 0)
+					date = date.AddMinutes(minuteCheat);
+			}
+			return date;
 		}
 
 		public static int GetNowTimestamp(bool utcTime)
@@ -336,7 +360,7 @@ namespace Dessentials.Helpers
 						return true;
 				return false;
 			}
-			
+
 			double validSeconds = 0;
 			while (fromDate < toDate)
 			{
@@ -381,7 +405,9 @@ namespace Dessentials.Helpers
 			for (int i = n - 1; i > 0; i--)
 			{
 				int j = Random.Range(0, i + 1);
-				(daysOfWeeks[i], daysOfWeeks[j]) = (daysOfWeeks[j], daysOfWeeks[i]);
+				var temp = daysOfWeeks[i];
+				daysOfWeeks[i] = daysOfWeeks[j];
+				daysOfWeeks[j] = temp;
 			}
 			// Take the first 'range' elements
 			var result = new DayOfWeek[range];
@@ -400,7 +426,9 @@ namespace Dessentials.Helpers
 			{
 				int j = Random.Range(0, i + 1); // Get a random index
 				// Swap elements at indices i and j
-				(allHours[i], allHours[j]) = (allHours[j], allHours[i]);
+				int temp = allHours[i];
+				allHours[i] = allHours[j];
+				allHours[j] = temp;
 			}
 
 			// Create a list to store the selected random hours
@@ -408,6 +436,20 @@ namespace Dessentials.Helpers
 			for (int i = 0; i < pCount; i++)
 				hours[i] = allHours[i];
 			return hours;
+		}
+	}
+
+	public static class TimeExtension
+	{
+		public static long ToUnixTimestamp(this DateTime value)
+		{
+			var elapsedTime = value - TimeHelper.Epoch;
+			return (long)elapsedTime.TotalSeconds;
+		}
+		public static int ToUnixTimestampInt(this DateTime value)
+		{
+			var elapsedTime = value - TimeHelper.Epoch;
+			return (int)elapsedTime.TotalSeconds;
 		}
 	}
 }
