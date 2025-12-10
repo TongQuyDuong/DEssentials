@@ -39,8 +39,8 @@ namespace Dessentials.Features.Tracking
             
             if (ITransitionalDataProvider.Exist)
             {
-                if (ITransitionalDataProvider.Global.CheatAdsRevenue > 0)
-                    revenue = ITransitionalDataProvider.Global.CheatAdsRevenue;
+                if (ITransitionalDataProvider.Global.CheatIncrementalAdsRevenue > 0)
+                    revenue = ITransitionalDataProvider.Global.CheatIncrementalAdsRevenue;
             }
             
             var adsRevenueDataProvider = IRevenueDataProvider.Global;
@@ -68,14 +68,15 @@ namespace Dessentials.Features.Tracking
             
             if (ITransitionalDataProvider.Exist)
             {
-                if (ITransitionalDataProvider.Global.CheatAdsRevenue > 0)
-                    revenue = ITransitionalDataProvider.Global.CheatAdsRevenue;
+                if (ITransitionalDataProvider.Global.CheatIncrementalAdsRevenue > 0)
+                    revenue = ITransitionalDataProvider.Global.CheatIncrementalAdsRevenue;
             }
             
             var adsRevenueDataProvider = IRevenueDataProvider.Global;
             if (adsRevenueDataProvider == null) return;
             
             adsRevenueDataProvider.AdsIncrementalValueSingleBidding += revenue;
+            adsRevenueDataProvider.AdsIncrementalValueMultiBidding += revenue;
             
             var valueSingle = adsRevenueDataProvider.AdsIncrementalValueSingleBidding;
             var configSingle
