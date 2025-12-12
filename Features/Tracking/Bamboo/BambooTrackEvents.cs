@@ -66,11 +66,16 @@ namespace Dessentials.Features.Tracking
             }
         }
 
-        public virtual void InitTrackTask()
+        public virtual bool InitTrackTask()
         {
+            if (m_initialized)
+                return false;
+            
             m_initialized = true;
             
             Debug.Log($"[BambooTracker] Start Tracking {EventName}");
+            
+            return true;
         }
 
         //Called when all conditions are met for the first time, meant for inheritors to call
