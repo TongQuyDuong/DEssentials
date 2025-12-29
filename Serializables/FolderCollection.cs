@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 using UnityEditor;
 using UnityEngine;
 
@@ -11,7 +14,11 @@ namespace Dessentials.Serializables
     [System.Serializable]
     public class FolderCollection<T> where T : Object
     {
-        [SerializeField] private List<FolderReference> folders = new List<FolderReference>();
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [LabelText("List")]
+#endif
+        private List<FolderReference> folders = new List<FolderReference>();
 
         public List<FolderReference> Folders => folders;
 
@@ -25,29 +32,13 @@ namespace Dessentials.Serializables
             
             if (folders == null || folders.Count == 0)
                 return assets;
-
-            string typeFilter = $"t:{typeof(T).Name}";
             
             foreach (var folder in folders)
             {
-                if (folder == null || string.IsNullOrEmpty(folder.GUID))
+                if (folder == null)
                     continue;
-
-                string folderPath = folder.Path;
-                if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
-                    continue;
-
-                // Find all assets of type T in this folder
-                string[] guids = AssetDatabase.FindAssets(typeFilter, new[] { folderPath });
                 
-                foreach (string guid in guids)
-                {
-                    string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                    T asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
-                    
-                    if (asset != null)
-                        assets.Add(asset);
-                }
+                assets.AddRange(folder.GetAllItemsOfType<T>());
             }
 
             return assets;

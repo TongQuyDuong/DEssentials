@@ -20,6 +20,34 @@ namespace Dessentials.Serializables
             set => GUID = AssetDatabase.AssetPathToGUID(value);
         }
         public FolderReference(string path) => Path = path;
+
+        public List<T> GetAllItemsOfType<T>() where T : Object
+        {
+            List<T> assets = new List<T>();
+            
+            if (string.IsNullOrEmpty(GUID))
+                return assets;
+
+            string folderPath = Path;
+            if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
+                return assets;
+            
+            string typeFilter = $"t:{typeof(T).Name}";
+
+            // Find all assets of type T in this folder
+            string[] guids = AssetDatabase.FindAssets(typeFilter, new[] { folderPath });
+                
+            foreach (string guid in guids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                T asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+                    
+                if (asset != null)
+                    assets.Add(asset);
+            }
+            
+            return assets;
+        }
     } 
     
         [CustomPropertyDrawer(typeof(FolderReference))]
