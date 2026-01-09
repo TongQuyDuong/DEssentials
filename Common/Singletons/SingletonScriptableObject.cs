@@ -6,7 +6,7 @@ namespace Dessentials.Common
     {
         static T instance;
 
-        public static T gInstance
+        public static T Instance
         {
             get
             {
