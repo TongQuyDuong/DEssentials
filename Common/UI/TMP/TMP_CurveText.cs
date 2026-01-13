@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Dessentials.Common.UI
 {
-	public class CurveTmp : MonoBehaviour
+	public class TMP_CurveText : MonoBehaviour
 	{
 		public AnimationCurve VertexCurve = new(new Keyframe(0, 0),
 			new Keyframe(0.5f, 1), new Keyframe(1, 0f));
