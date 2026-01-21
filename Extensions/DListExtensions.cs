@@ -17,6 +17,34 @@ namespace Dessentials.Extensions
             T random = list[UnityEngine.Random.Range(0, list.Count)];
             return random;
         }
+        public static List<T> GetRandomElements<T>(this IEnumerable<T> list, int elementsCount)
+        {
+            return list.OrderBy(arg => Guid.NewGuid()).Take(elementsCount).ToList();
+        }
+        
+        public static List<T> GetRandomElementsInGroups<T, TKeySelector>(this IEnumerable<T> list, int elementsCount, Func<T, TKeySelector> keySelector)
+        {
+            var iEnumerable = list.ToList();
+            if (elementsCount >= iEnumerable.Count())
+                return iEnumerable.ToList();
+            
+            var resultList = new List<T>();
+            var remainingCount = elementsCount;
+            
+            var groups = iEnumerable.GroupBy(keySelector).OrderBy(arg => Guid.NewGuid()).ToList();
+            
+            foreach (var group in groups)
+            {
+                if (remainingCount <= 0)
+                    break;
+                
+                var takeCount = Math.Min(remainingCount, group.Count());
+                resultList.AddRange(group.Take(takeCount));
+                remainingCount -= takeCount;
+            }
+            
+            return resultList;
+        }
 
         public static T GetRandomFromListWithProrityPredicates<T>(this List<T> list, params Predicate<T>[] predicates)
         {
@@ -35,6 +63,63 @@ namespace Dessentials.Extensions
             }
             
             return list.GetRandomFromList();
+        }
+        
+        public static List<T> GetEvenlyDistributedRandomElements<T>(this List<T> list, int elementsCount)
+        {
+            var sourceList = list.ToList();
+            if (elementsCount >= sourceList.Count)
+                return sourceList;
+            
+            if (elementsCount <= 0)
+                return new List<T>();
+            
+            var result = new List<T>();
+            var rng = new System.Random();
+            var usedIndices = new HashSet<int>();
+            
+            // calculate bin size
+            float binSize = (float)sourceList.Count / elementsCount;
+            
+            // get 1 random element from each bin
+            for (int i = 0; i < elementsCount; i++)
+            {
+                int binStart = (int)(i * binSize);
+                int binEnd = (int)((i + 1) * binSize);
+                
+                // Đảm bảo bin cuối cùng bao gồm tất cả phần tử còn lại
+                if (i == elementsCount - 1)
+                    binEnd = sourceList.Count;
+                
+                // Chọn ngẫu nhiên một index trong bin, đảm bảo không trùng
+                int randomIndex;
+                int attempts = 0;
+                do
+                {
+                    randomIndex = rng.Next(binStart, binEnd);
+                    attempts++;
+                    
+                    // Nếu thử quá nhiều lần, mở rộng phạm vi tìm kiếm
+                    if (attempts > (binEnd - binStart) * 2)
+                    {
+                        // Tìm index chưa dùng gần nhất trong bin
+                        for (int j = binStart; j < binEnd; j++)
+                        {
+                            if (!usedIndices.Contains(j))
+                            {
+                                randomIndex = j;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                } while (usedIndices.Contains(randomIndex));
+                
+                usedIndices.Add(randomIndex);
+                result.Add(sourceList[randomIndex]);
+            }
+            
+            return result;
         }
         
         public static int RemoveNullElements<T>(this List<T> list, bool logResults = true) where T : UnityEngine.Object
@@ -215,6 +300,28 @@ namespace Dessentials.Extensions
             return result;
         }
         
+        public static void DSwap<T>(this IList<T> list, int i, int j)
+        {
+            (list[i], list[j]) = (list[j], list[i]);
+        }
+        
+        public static void DShuffle<T>(this IList<T> list, int seed)
+        {
+            UnityEngine.Random.InitState(seed);
+            for (int i = 0; i < list.Count; i++)
+            {
+                list.DSwap(i, UnityEngine.Random.Range(i, list.Count));
+            }
+        }
+
+        public static void DShuffle<T>(this IList<T> list)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                list.DSwap(i, UnityEngine.Random.Range(i, list.Count));
+            }
+        }
+        
         public static string ToJson<T>(List<T> list)
         {
             var wrapper = new ListWrapper<T>();
@@ -224,6 +331,7 @@ namespace Dessentials.Extensions
             json = json.Remove(json.Length - 1);
             return json;
         }
+        
         
         [Serializable]
         private class ListWrapper<T>
