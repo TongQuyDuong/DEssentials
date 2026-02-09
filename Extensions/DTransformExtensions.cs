@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
 #if DOTWEEN
 using DG.Tweening;
 #endif
@@ -8,7 +5,7 @@ using UnityEngine;
 
 namespace Dessentials.Extensions
 {
-    public static class DTransformExtensionsq
+    public static class DTransformExtensions
     {
 #if DOTWEEN
         public static Sequence DOBouncyScale(this Transform transform, float duration, float strength = 0.1f)
