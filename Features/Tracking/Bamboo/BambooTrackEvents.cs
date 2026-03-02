@@ -54,7 +54,7 @@ namespace Dessentials.Features.Tracking
         protected bool m_initialized = false;
         protected bool m_eventTracked = false;
         
-        protected virtual string EventName => string.Empty;
+        protected readonly string _eventName;
 
         public virtual bool IsTrackable
         {
@@ -62,8 +62,13 @@ namespace Dessentials.Features.Tracking
             {
                 var trackedEventsProvider = IAlreadyTrackedEventsProvider.Global;
 
-                return trackedEventsProvider != null && !trackedEventsProvider.AlreadyTrackedEvents.Contains(EventName);
+                return trackedEventsProvider != null && !trackedEventsProvider.AlreadyTrackedEvents.Contains(_eventName);
             }
+        }
+
+        protected BaseBambooTrackEvent(string eventName)
+        {
+            _eventName = eventName;
         }
 
         public virtual bool InitTrackTask()
@@ -73,7 +78,7 @@ namespace Dessentials.Features.Tracking
             
             m_initialized = true;
             
-            Debug.Log($"[BambooTracker] Start Tracking {EventName}");
+            Debug.Log($"[BambooTracker] Start Tracking {_eventName}");
             
             return true;
         }
@@ -91,12 +96,12 @@ namespace Dessentials.Features.Tracking
             if (revenueDataProvider == null)
                 return;
             
-            Debug.Log($"[BambooTracker] Firing {EventName}");
+            Debug.Log($"[BambooTracker] Firing {_eventName}");
             
             m_eventTracked = true;
-            IAlreadyTrackedEventsProvider.Global?.OnNewBambooEventTracked(EventName);
+            IAlreadyTrackedEventsProvider.Global?.OnNewBambooEventTracked(_eventName);
             
-            IFirebaseAnalytics.Global?.LogEvent(EventName, "ads_value", revenueDataProvider.LTV);
+            IFirebaseAnalytics.Global?.LogEvent(_eventName, "ads_value", revenueDataProvider.LTV);
         }
     }
 }
