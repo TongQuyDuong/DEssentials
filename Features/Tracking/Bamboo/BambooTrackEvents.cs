@@ -5,6 +5,7 @@ using Dessentials.Common.GlobalServices;
 using UnityEngine;
 #if DESSENTIALS_ZEGO_SDK
 using Zego;
+using Firebase.Analytics;
 #else
 using Dessentials.Common.ServiceLocator;
 #endif
@@ -41,6 +42,7 @@ namespace Dessentials.Features.Tracking
     {
         public double FirstAdRevenue { get; }
         public double TotalAdsRevenue { get; set; }
+        public double LastestAdsRevenue { get; set; }
         public double TotalIAPRevenue { get; }
         
         public double LTV => TotalAdsRevenue + TotalIAPRevenue;
@@ -55,6 +57,8 @@ namespace Dessentials.Features.Tracking
         protected bool m_eventTracked = false;
         
         protected readonly string _eventName;
+        
+        public string EventName => _eventName;
 
         public virtual bool IsTrackable
         {
@@ -84,24 +88,66 @@ namespace Dessentials.Features.Tracking
         }
 
         //Called when all conditions are met for the first time, meant for inheritors to call
-        protected void TrackBambooEvent()
+        protected void TrackBambooEventFirstTime()
         {
             if (!m_initialized
                 || m_eventTracked
                 || !IsTrackable)
                 return;
             
-            var revenueDataProvider = IRevenueDataProvider.Global;
-            
-            if (revenueDataProvider == null)
-                return;
-            
-            Debug.Log($"[BambooTracker] Firing {_eventName}");
-            
             m_eventTracked = true;
             IAlreadyTrackedEventsProvider.Global?.OnNewBambooEventTracked(_eventName);
+
+            FireBambooEvent(true);
+        }
+
+        public void TrackBambooEventAdditionalTimes()
+        {
+            if (!m_eventTracked
+                || IsTrackable)
+                return;
             
-            IFirebaseAnalytics.Global?.LogEvent(_eventName, "ads_value", revenueDataProvider.LTV);
+            FireBambooEvent(false);
+        }
+
+        protected void FireBambooEvent(bool isFirstTimeFire)
+        {
+            var revenueDataProvider = IRevenueDataProvider.Global;
+
+            if (revenueDataProvider == null)
+            {
+                Debug.LogError("[BambooTracker] RevenueDataProvider null");
+                return;
+            }
+
+#if DESSENTIALS_ZEGO_SDK
+            if (isFirstTimeFire)
+            {
+                Parameter[] _paramTotal = 
+                { 
+                    new("value", revenueDataProvider.TotalAdsRevenue),
+                    new("currency", "USD")
+                };
+                
+                Debug.Log($"[BambooTracker] Firing {_eventName}");
+
+                IFirebaseAnalytics.Global?.LogEvent(_eventName, _paramTotal);
+            }
+            else
+            {
+                Parameter[] _paramLastest = 
+                {
+                    new("value", revenueDataProvider.LastestAdsRevenue),
+                    new("currency", "USD")
+                };
+                
+                Debug.Log($"[BambooTracker] Firing {_eventName}");
+                
+                IFirebaseAnalytics.Global?.LogEvent(_eventName, _paramLastest);
+            }
+#else
+            Debug.LogError($"[BambooTracker] No Zego SDK");            
+#endif
         }
     }
 }

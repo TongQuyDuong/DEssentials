@@ -41,7 +41,7 @@ namespace Dessentials.Features.Tracking
                 return false;
 
             if (ActionOccurenceAmountCurrentValue >= _actionOccurenceAmountReportThreshold)
-                TrackBambooEvent();
+                TrackBambooEventFirstTime();
             else
                 RegisterOnValueChanged();
             
@@ -57,7 +57,7 @@ namespace Dessentials.Features.Tracking
 
             if (currentValue >= _actionOccurenceAmountReportThreshold)
             {
-                TrackBambooEvent();
+                TrackBambooEventFirstTime();
                 DeregisterOnValueChanged();
             }
         }

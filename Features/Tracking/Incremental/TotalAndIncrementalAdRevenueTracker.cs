@@ -47,6 +47,9 @@ namespace Dessentials.Features.Tracking
             if (adsRevenueDataProvider == null) return;
             
             adsRevenueDataProvider.TotalAdsRevenue += revenue;
+            adsRevenueDataProvider.LastestAdsRevenue = revenue;
+            
+            IBambooTracker.Global?.HandleOnNewAdRevenuePaid();
             
             if (IFirebaseAnalytics.Exist)
             {

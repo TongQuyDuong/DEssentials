@@ -6,9 +6,20 @@ using System.Reflection;
 using Dessentials.Common.GlobalServices;
 using UnityEngine;
 
+#if DESSENTIALS_ZEGO_SDK
+using Zego;
+#else
+using Dessentials.Common.ServiceLocator;
+#endif
+
 namespace Dessentials.Features.Tracking
 {
-    public partial class BambooTracker : MonoBehaviour
+    public interface IBambooTracker : IGlobalService<IBambooTracker>
+    {
+        public void HandleOnNewAdRevenuePaid();
+    }
+    
+    public partial class BambooTracker : MonoBehaviour, IBambooTracker
     {
         public static Action ReInitializeBambooEvents;
         
@@ -16,6 +27,8 @@ namespace Dessentials.Features.Tracking
 
         private void Awake()
         {
+            ServiceLocator.Global.Register<IBambooTracker>(this);
+            
             var bambooEventFields
                 = GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                     .Where(field => field.IsDefined(typeof(RegisteredBambooEvent), false));
@@ -43,6 +56,15 @@ namespace Dessentials.Features.Tracking
             {
                 if (bambooEvent.IsTrackable)
                     bambooEvent.InitTrackTask();
+            }
+        }
+
+        public void HandleOnNewAdRevenuePaid()
+        {
+            foreach (var bambooEvent in m_bambooEvents)
+            {
+                if (!bambooEvent.IsTrackable)
+                    bambooEvent.TrackBambooEventAdditionalTimes();
             }
         }
         
