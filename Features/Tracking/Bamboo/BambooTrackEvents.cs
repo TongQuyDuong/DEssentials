@@ -59,6 +59,7 @@ namespace Dessentials.Features.Tracking
         protected readonly string _eventName;
         
         public string EventName => _eventName;
+        public bool IsActive => m_initialized;
 
         public virtual bool IsTrackable
         {

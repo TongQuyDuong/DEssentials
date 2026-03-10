@@ -23,6 +23,9 @@ namespace Dessentials.Features.Tracking
     {
         public static Action ReInitializeBambooEvents;
         
+        public int ActiveBambooTracksCount 
+            => m_bambooEvents.Count(e => e.IsActive);
+        
         private List<BaseBambooTrackEvent> m_bambooEvents = new();
 
         private void Awake()
