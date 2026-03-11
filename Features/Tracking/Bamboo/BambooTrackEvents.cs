@@ -92,8 +92,7 @@ namespace Dessentials.Features.Tracking
         protected void TrackBambooEventFirstTime()
         {
             if (!m_initialized
-                || m_eventTracked
-                || !IsTrackable)
+                || m_eventTracked)
                 return;
             
             m_eventTracked = true;
@@ -104,8 +103,7 @@ namespace Dessentials.Features.Tracking
 
         public void TrackBambooEventAdditionalTimes()
         {
-            if (!m_eventTracked
-                || IsTrackable)
+            if (!m_eventTracked)
                 return;
             
             FireBambooEvent(false);
