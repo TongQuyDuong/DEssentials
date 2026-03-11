@@ -61,7 +61,7 @@ namespace Dessentials.Features.Tracking
         public string EventName => _eventName;
         public bool IsActive => m_initialized;
 
-        public virtual bool IsTrackable
+        protected virtual bool IsTrackable
         {
             get
             {
@@ -79,6 +79,21 @@ namespace Dessentials.Features.Tracking
         public virtual bool InitTrackTask()
         {
             if (m_initialized)
+            {
+                if (IsTrackable)
+                {
+                    Debug.Log($"[BambooTracker] Still Tracking {_eventName}");
+                }
+                else
+                {
+                    m_initialized = false;
+                    Debug.Log($"[BambooTracker] Stop Tracking {_eventName}");
+                }
+                
+                return false;
+            }
+            
+            if (!IsTrackable)
                 return false;
             
             m_initialized = true;
@@ -103,7 +118,10 @@ namespace Dessentials.Features.Tracking
 
         public void TrackBambooEventAdditionalTimes()
         {
-            if (!m_eventTracked)
+            var trackedEventsProvider = IAlreadyTrackedEventsProvider.Global;
+            
+            if (trackedEventsProvider == null
+                || !trackedEventsProvider.AlreadyTrackedEvents.Contains(_eventName))
                 return;
             
             FireBambooEvent(false);

@@ -46,7 +46,11 @@ namespace Dessentials.Features.Tracking
             gameInitializer?.RegisterOnPlayerDataInitialized(InitBambooEvents);
 
             ReInitializeBambooEvents += InitBambooEvents;
+
+            PartialExtendedOnAwake();
         }
+
+        partial void PartialExtendedOnAwake();
 
         private void OnDestroy()
         {
@@ -57,8 +61,7 @@ namespace Dessentials.Features.Tracking
         {
             foreach (var bambooEvent in m_bambooEvents)
             {
-                if (bambooEvent.IsTrackable)
-                    bambooEvent.InitTrackTask();
+                bambooEvent.InitTrackTask();
             }
         }
 
@@ -66,8 +69,7 @@ namespace Dessentials.Features.Tracking
         {
             foreach (var bambooEvent in m_bambooEvents)
             {
-                if (!bambooEvent.IsTrackable)
-                    bambooEvent.TrackBambooEventAdditionalTimes();
+                bambooEvent.TrackBambooEventAdditionalTimes();
             }
         }
         

@@ -20,9 +20,9 @@ namespace Dessentials.Features.Tracking
         {
             _withinAmountOfDaysThreshold = withinAmountOfDays;
             _actionOccurenceAmountReportThreshold = actionOccurenceAmountReportThreshold;
-        } 
+        }
 
-        public override bool IsTrackable
+        protected override bool IsTrackable
         {
             get
             {

@@ -10,7 +10,7 @@ namespace Dessentials.Features.Tracking
         
         protected HighValueUserBambooEvent(string eventName) : base(eventName) {}
 
-        public override bool IsTrackable
+        protected override bool IsTrackable
         {
             get
             {
