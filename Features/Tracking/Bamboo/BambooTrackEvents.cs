@@ -44,6 +44,7 @@ namespace Dessentials.Features.Tracking
         public double TotalAdsRevenue { get; set; }
         public double LastestAdsRevenue { get; set; }
         public double TotalIAPRevenue { get; }
+        public double LastIAPRevenue { get; }
         
         public double LTV => TotalAdsRevenue + TotalIAPRevenue;
         
@@ -113,7 +114,7 @@ namespace Dessentials.Features.Tracking
             m_eventTracked = true;
             IAlreadyTrackedEventsProvider.Global?.OnNewBambooEventTracked(_eventName);
 
-            FireBambooEvent(true);
+            FireBambooEvent(FireBambooEventType.FirstTime);
         }
 
         public void TrackBambooEventAdditionalTimes()
@@ -124,10 +125,21 @@ namespace Dessentials.Features.Tracking
                 || !trackedEventsProvider.AlreadyTrackedEvents.Contains(_eventName))
                 return;
             
-            FireBambooEvent(false);
+            FireBambooEvent(FireBambooEventType.AdditionalTimes);
+        }
+        
+        public void TrackBambooEventIAP()
+        {
+            var trackedEventsProvider = IAlreadyTrackedEventsProvider.Global;
+            
+            if (trackedEventsProvider == null
+                || !trackedEventsProvider.AlreadyTrackedEvents.Contains(_eventName))
+                return;
+            
+            FireBambooEvent(FireBambooEventType.IAP);
         }
 
-        protected void FireBambooEvent(bool isFirstTimeFire)
+        protected void FireBambooEvent(FireBambooEventType type)
         {
             var revenueDataProvider = IRevenueDataProvider.Global;
 
@@ -138,33 +150,33 @@ namespace Dessentials.Features.Tracking
             }
 
 #if DESSENTIALS_ZEGO_SDK
-            if (isFirstTimeFire)
-            {
-                Parameter[] _paramTotal = 
-                { 
-                    new("value", revenueDataProvider.TotalAdsRevenue),
-                    new("currency", "USD")
-                };
-                
-                Debug.Log($"[BambooTracker] Firing {_eventName}");
 
-                IFirebaseAnalytics.Global?.LogEvent(_eventName, _paramTotal);
-            }
-            else
+            var revenueValue = type switch
             {
-                Parameter[] _paramLastest = 
-                {
-                    new("value", revenueDataProvider.LastestAdsRevenue),
-                    new("currency", "USD")
-                };
+                FireBambooEventType.FirstTime => revenueDataProvider.TotalAdsRevenue,
+                FireBambooEventType.AdditionalTimes => revenueDataProvider.LastestAdsRevenue,
+                FireBambooEventType.IAP => revenueDataProvider.LastIAPRevenue,
+            };
+            
+            Parameter[] _paramTotal = 
+            { 
+                new("value", revenueValue),
+                new("currency", "USD")
+            };
                 
-                Debug.Log($"[BambooTracker] Firing {_eventName}");
-                
-                IFirebaseAnalytics.Global?.LogEvent(_eventName, _paramLastest);
-            }
+            Debug.Log($"[BambooTracker] Firing {_eventName}");
+
+            IFirebaseAnalytics.Global?.LogEvent(_eventName, _paramTotal);
 #else
             Debug.LogError($"[BambooTracker] No Zego SDK");            
 #endif
+        }
+
+        protected enum FireBambooEventType
+        {
+            FirstTime,
+            AdditionalTimes,
+            IAP
         }
     }
 }

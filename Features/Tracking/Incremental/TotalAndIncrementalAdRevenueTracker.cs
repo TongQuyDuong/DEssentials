@@ -6,6 +6,7 @@ using Dessentials.Common.GlobalServices;
 using Firebase.Analytics;
 using Runtime.Manager.Data;
 using UnityEngine;
+using Zego;
 
 namespace Dessentials.Features.Tracking
 {
@@ -35,6 +36,9 @@ namespace Dessentials.Features.Tracking
 
         private void TrackTotalAdsRevenue(Zego.AdPaidEvent e)
         {
+            if (e.Format is EAdFormat.Banner or EAdFormat.AppOpen or EAdFormat.None)
+                return;
+            
             var revenue = e.Revenue;
             
             if (ITransitionalDataProvider.Exist)

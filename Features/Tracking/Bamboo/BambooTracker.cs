@@ -17,6 +17,8 @@ namespace Dessentials.Features.Tracking
     public interface IBambooTracker : IGlobalService<IBambooTracker>
     {
         public void HandleOnNewAdRevenuePaid();
+        
+        public void HandleOnNewIapPaid();
     }
     
     public partial class BambooTracker : MonoBehaviour, IBambooTracker
@@ -70,6 +72,14 @@ namespace Dessentials.Features.Tracking
             foreach (var bambooEvent in m_bambooEvents)
             {
                 bambooEvent.TrackBambooEventAdditionalTimes();
+            }
+        }
+
+        public void HandleOnNewIapPaid()
+        {
+            foreach (var bambooEvent in m_bambooEvents)
+            {
+                bambooEvent.TrackBambooEventIAP();
             }
         }
         
