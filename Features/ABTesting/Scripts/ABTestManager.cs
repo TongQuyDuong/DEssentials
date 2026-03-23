@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Dessentials.Common;
+using UnityEditor;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
@@ -11,7 +12,8 @@ using UnityEngine;
 
 namespace Dessentials.Features.ABTesting
 {
-    public partial class ABTestManager : PersistentMonoSingleton<ABTestManager>
+	[CreateAssetMenu(menuName = "Dessentials/ABTestManager", fileName = "ABTestManager")]
+    public partial class ABTestManager : SingletonScriptableObject<ABTestManager>
     {
 #if ODIN_INSPECTOR
 	    [TitleGroup("General")]
@@ -25,14 +27,12 @@ namespace Dessentials.Features.ABTesting
 	    
         private List<IABTest> m_ABTests = new();
         
-		protected override void Awake()
+		public void Initialize()
 		{
-			base.Awake(); 
-
 			var abTestFields
 				= GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
 					.Where(field => field.IsDefined(typeof(RegisteredABTestAttribute), false));
-
+  
 			foreach (var field in abTestFields)
 			{
 				m_ABTests.Add((IABTest)field.GetValue(this));
