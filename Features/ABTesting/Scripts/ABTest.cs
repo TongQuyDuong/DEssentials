@@ -26,16 +26,21 @@ namespace Dessentials.Features.ABTesting
 
 	    [SerializeField]
 	    private bool enable;
+	    
+	    [NonSerialized]
 #if ODIN_INSPECTOR
 	    [ShowIf("@UnityEngine.Application.isPlaying && enable")]
 #endif
-	    [SerializeField]
-	    private T FetchedValue;
+	    public T FetchedValue;
+	    
 #if ODIN_INSPECTOR
 	    [ShowIf("@!UnityEngine.Application.isPlaying || !enable")]
 #endif
 	    [SerializeField]
 	    private T DefaultValue;
+	    
+	    [NonSerialized]
+	    public bool fetched;
 
 	    public T Value
 	    {
@@ -53,8 +58,6 @@ namespace Dessentials.Features.ABTesting
 	    public string FirebaseKey => firebaseKey;
 	    
 	    public bool Enable => enable;
-
-	    public bool fetched;
 
 	    public void Init()
 	    {
