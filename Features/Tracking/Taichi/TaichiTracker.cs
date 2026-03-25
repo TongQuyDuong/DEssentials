@@ -39,7 +39,7 @@ namespace Dessentials.Features.Tracking
 
                 if (revenueDataProvider.LastestAdsRevenue >= taichiConfig.RoundedThreshold)
                 {
-                    var eventName = taichiConfig.country;
+                    var eventName = $"taichi_top50_{taichiConfig.country}";
                     
                     Parameter[] _param = 
                     { 
