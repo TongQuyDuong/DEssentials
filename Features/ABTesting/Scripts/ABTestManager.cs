@@ -27,7 +27,9 @@ namespace Dessentials.Features.ABTesting
         
 		protected override void Awake()
 		{
-			base.Awake(); 
+			base.Awake();
+
+			ExternalOnAwake();
 
 			var abTestFields
 				= GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
@@ -61,6 +63,8 @@ namespace Dessentials.Features.ABTesting
 				}
 			}
 		}
+
+		partial void ExternalOnAwake();
 
 #if UNITY_EDITOR
 		#if ODIN_INSPECTOR
