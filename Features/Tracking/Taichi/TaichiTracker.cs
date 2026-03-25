@@ -58,7 +58,7 @@ namespace Dessentials.Features.Tracking
     [Serializable]
     public class TaichiTrackingConfig
     {
-        public string country = "Other";
+        public string country = "Not Fetched";
         public double threshold = 999999999;
 
         public double RoundedThreshold
