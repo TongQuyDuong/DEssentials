@@ -54,6 +54,7 @@ namespace Dessentials.Features.Tracking
             adsRevenueDataProvider.LastestAdsRevenue = revenue;
             
             IBambooTracker.Global?.HandleOnNewAdRevenuePaid();
+            ITaichiTracker.Global?.HandleOnNewAdRevenuePaid();
             
             if (IFirebaseAnalytics.Exist)
             {

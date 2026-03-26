@@ -29,6 +29,10 @@ namespace Dessentials.Features.ABTesting
         
 		public void Initialize()
 		{
+			base.Awake();
+
+			ExternalOnAwake();
+
 			var abTestFields
 				= GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
 					.Where(field => field.IsDefined(typeof(RegisteredABTestAttribute), false));
@@ -61,6 +65,8 @@ namespace Dessentials.Features.ABTesting
 				}
 			}
 		}
+
+		partial void ExternalOnAwake();
 
 #if UNITY_EDITOR
 		#if ODIN_INSPECTOR
