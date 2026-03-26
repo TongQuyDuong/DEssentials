@@ -29,8 +29,6 @@ namespace Dessentials.Features.ABTesting
         
 		public void Initialize()
 		{
-			base.Awake();
-
 			ExternalOnAwake();
 
 			var abTestFields
