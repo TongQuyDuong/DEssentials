@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Dessentials.Common;
-using UnityEditor;
-#if ODIN_INSPECTOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 using UnityEngine;
@@ -15,7 +13,7 @@ namespace Dessentials.Features.ABTesting
 	[CreateAssetMenu(menuName = "Dessentials/ABTestManager", fileName = "ABTestManager")]
     public partial class ABTestManager : SingletonScriptableObject<ABTestManager>
     {
-#if ODIN_INSPECTOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
 	    [TitleGroup("General")]
 #endif
 	    [RegisteredABTest]
