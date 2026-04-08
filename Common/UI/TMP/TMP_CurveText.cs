@@ -8,10 +8,10 @@ namespace Dessentials.Common.UI
 {
 	public class TMP_CurveText : MonoBehaviour
 	{
-		public AnimationCurve VertexCurve = new(new Keyframe(0, 0),
-			new Keyframe(0.5f, 1), new Keyframe(1, 0f));
+		public AnimationCurve VertexCurve = new(new Keyframe(0, 0, 0,0.23f),
+			new Keyframe(0.5f, 0.05f), new Keyframe(1, 0f,-0.23f,0));
 
-		public float CurveScale = 15f;
+		public float CurveScale = 350f;
 
 		[SerializeField] private TMP_Text m_TextComponent;
 
