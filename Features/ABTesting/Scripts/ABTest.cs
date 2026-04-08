@@ -27,11 +27,11 @@ namespace Dessentials.Features.ABTesting
 	    [SerializeField]
 	    private bool enable;
 	    
-	    [NonSerialized]
 #if ODIN_INSPECTOR
+	    [ShowInInspector]
 	    [ShowIf("@UnityEngine.Application.isPlaying && enable")]
 #endif
-	    public T FetchedValue;
+	    private T FetchedValue;
 	    
 #if ODIN_INSPECTOR
 	    [ShowIf("@!UnityEngine.Application.isPlaying || !enable")]
