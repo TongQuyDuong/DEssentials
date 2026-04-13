@@ -25,6 +25,7 @@ namespace Dessentials.Features.Tracking
 
         public void HandleOnNewAdRevenuePaid()
         {
+#if DESSENTIALS_ZEGO_SDK
             var taichiConfig = ITaichiTrackingConfigProvider.Global?.TaichiTrackingConfig;
 
             if (taichiConfig != null)
@@ -52,6 +53,7 @@ namespace Dessentials.Features.Tracking
                     IFirebaseAnalytics.Global?.LogEvent(eventName, _param);
                 }
             }
+#endif
         }
     }
 
