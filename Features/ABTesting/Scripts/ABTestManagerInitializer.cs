@@ -16,7 +16,8 @@ namespace Dessentials.Features.ABTesting
 
 #if UNITY_EDITOR && ODIN_INSPECTOR
         [Button]
-        public void PingAbTestManager()
+        [MenuItem("Tools/Dessentials/Ping AB Test Manager")]
+        public static void PingAbTestManager()
         {
             var assetPath = AssetDatabase.GetAssetPath(ABTestManager.Instance);
             
