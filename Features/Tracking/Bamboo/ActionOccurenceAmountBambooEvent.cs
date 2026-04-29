@@ -16,7 +16,8 @@ namespace Dessentials.Features.Tracking
         protected ActionOccurenceAmountBambooEvent
         (string eventName,
             int withinAmountOfDays,
-            int actionOccurenceAmountReportThreshold) : base(eventName)
+            int actionOccurenceAmountReportThreshold,
+            bool trackOnIAP = true) : base(eventName, trackOnIAP)
         {
             _withinAmountOfDaysThreshold = withinAmountOfDays;
             _actionOccurenceAmountReportThreshold = actionOccurenceAmountReportThreshold;
@@ -26,12 +27,20 @@ namespace Dessentials.Features.Tracking
         {
             get
             {
-                var sessionDataProvider = ISessionDataProvider.Global;
+                var withinDaysThresholdCondition = true;
+
+                if (_withinAmountOfDaysThreshold > 0)
+                {
+                    var sessionDataProvider = ISessionDataProvider.Global;
+                    
+                    withinDaysThresholdCondition = 
+                        sessionDataProvider != null
+                        && sessionDataProvider.DaysSinceFirstActive <= _withinAmountOfDaysThreshold;
+                }
 
                 return base.IsTrackable
                        && ActionOccurenceAmountCurrentValue < _actionOccurenceAmountReportThreshold
-                       && sessionDataProvider != null
-                       && sessionDataProvider.DaysSinceFirstActive <= _withinAmountOfDaysThreshold;
+                       && withinDaysThresholdCondition;
             }
         }
 

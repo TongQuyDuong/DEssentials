@@ -56,6 +56,7 @@ namespace Dessentials.Features.Tracking
     {
         protected bool m_initialized = false;
         protected bool m_eventTracked = false;
+        protected bool _doesTrackOnIAP = false;
         
         protected readonly string _eventName;
         
@@ -72,9 +73,10 @@ namespace Dessentials.Features.Tracking
             }
         }
 
-        protected BaseBambooTrackEvent(string eventName)
+        protected BaseBambooTrackEvent(string eventName, bool trackOnIAP = true)
         {
             _eventName = eventName;
+            _doesTrackOnIAP = trackOnIAP;
         }
 
         public virtual bool InitTrackTask()
@@ -134,6 +136,9 @@ namespace Dessentials.Features.Tracking
             
             if (trackedEventsProvider == null
                 || !trackedEventsProvider.AlreadyTrackedEvents.Contains(_eventName))
+                return;
+            
+            if (!_doesTrackOnIAP)
                 return;
             
             FireBambooEvent(FireBambooEventType.IAP);
