@@ -1,13 +1,13 @@
 #if UNITY_EDITOR
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using UnityEditor;
 using UnityEngine; 
+using Object = UnityEngine.Object;
 #endif
 
 namespace Dessentials.Helpers
@@ -15,6 +15,12 @@ namespace Dessentials.Helpers
 #if UNITY_EDITOR
     public static class DAssetHelper
     {
+        public static string GetGUID(Object target)
+        {
+            string path = UnityEditor.AssetDatabase.GetAssetPath(target);
+            return UnityEditor.AssetDatabase.AssetPathToGUID(path);
+        }
+        
         public static List<GameObject> GetPrefabsInDirectory(string directoryPath, List<string> ignoreFolerNames = null)
         {
             var prefabs = new List<GameObject>();

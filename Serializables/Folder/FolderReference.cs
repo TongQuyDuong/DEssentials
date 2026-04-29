@@ -1,8 +1,9 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Dessentials.Serializables
 {
@@ -19,6 +20,9 @@ namespace Dessentials.Serializables
             get => AssetDatabase.GUIDToAssetPath(GUID);
             set => GUID = AssetDatabase.AssetPathToGUID(value);
         }
+        
+        public bool IsValid => !string.IsNullOrEmpty(GUID) && AssetDatabase.IsValidFolder(Path);
+        
         public FolderReference(string path) => Path = path;
 
         public List<T> GetAllItemsOfType<T>() where T : Object
@@ -48,32 +52,73 @@ namespace Dessentials.Serializables
             
             return assets;
         }
+        
+        public T[] LoadAssets<T>() where T : Object
+        {
+            if (!IsValid)
+                return Array.Empty<T>();
+
+            var guids = AssetDatabase.FindAssets($"t:{typeof(T).Name}", new[] { Path });
+
+            List<T> results = new();
+            string path;
+            for (int i = 0; i < guids.Length; i++)
+            {
+                path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                if (!AssetDatabase.IsValidFolder(path))
+                    results.Add(AssetDatabase.LoadAssetAtPath<T>(path));
+            }
+
+            return results.ToArray();
+        }
+        
+        public Object[] GetSubFolders()
+        {
+            string[] paths = AssetDatabase.GetSubFolders(Path);
+            var folders = new Object[paths.Length];
+            for (int i = 0; i < paths.Length; i++)
+                folders[i] = AssetDatabase.LoadAssetAtPath<Object>(paths[i]);
+            return folders;
+        }
     } 
     
         [CustomPropertyDrawer(typeof(FolderReference))]
     public class FolderReferencePropertyDrawer : PropertyDrawer
     {
+        private static GUIStyle _dragRefStyle;
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var guid = property.FindPropertyRelative("GUID");
-            var obj = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(guid.stringValue));
+            SerializedProperty guid = property.FindPropertyRelative("GUID");
+            Object obj = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(guid.stringValue));
+            GUIContent objContent = EditorGUIUtility.ObjectContent(obj, typeof(DefaultAsset));
 
-            GUIContent guiContent = EditorGUIUtility.ObjectContent(obj, typeof(DefaultAsset));
+            EditorGUI.BeginProperty(position, label, property);
 
-            Rect r = EditorGUI.PrefixLabel(position, label);
+            // rect after the label
+            Rect remainingRect = EditorGUI.PrefixLabel(position, label);
 
-            Rect textFieldRect = r;
-            textFieldRect.width -= 19f;
+            HandleDragRefRect(property, remainingRect, obj, objContent, guid, out Rect dragRefRect);
 
-            GUIStyle textFieldStyle = new GUIStyle("TextField")
-            {
-                imagePosition = obj ? ImagePosition.ImageLeft : ImagePosition.TextOnly
-            };
+            HandleFolderSelectionRect(property, remainingRect, dragRefRect, guid);
 
-            if (GUI.Button(textFieldRect, guiContent, textFieldStyle) && obj)
+            EditorGUI.EndProperty();
+        }
+
+        private void HandleDragRefRect(SerializedProperty property, Rect remainingRect, Object obj, GUIContent objContent,
+            SerializedProperty guid, out Rect dragRefRect)
+        {
+            dragRefRect = remainingRect;
+            dragRefRect.width -= 19f;
+
+            if (_dragRefStyle == null)
+                _dragRefStyle = new GUIStyle("TextField");
+            _dragRefStyle.imagePosition = obj ? ImagePosition.ImageLeft : ImagePosition.TextOnly;
+
+            if (GUI.Button(dragRefRect, objContent, _dragRefStyle) && obj)
                 EditorGUIUtility.PingObject(obj);
 
-            if (textFieldRect.Contains(Event.current.mousePosition))
+            if (dragRefRect.Contains(Event.current.mousePosition))
             {
                 if (Event.current.type == EventType.DragUpdated)
                 {
@@ -88,18 +133,23 @@ namespace Dessentials.Serializables
                     string path = AssetDatabase.GetAssetPath(reference);
                     if (Directory.Exists(path))
                     {
-                        obj = reference;
                         guid.stringValue = AssetDatabase.AssetPathToGUID(path);
+                        property.serializedObject.ApplyModifiedProperties();
                     }
                     Event.current.Use();
                 }
             }
+        }
+        
+        private void HandleFolderSelectionRect(SerializedProperty property, Rect remainingRect, Rect dragRefRect,
+            SerializedProperty guid)
+        {
+            Object obj;
+            Rect folderSelectionRect = remainingRect;
+            folderSelectionRect.x = dragRefRect.xMax + 1;
+            folderSelectionRect.width = 19f;
 
-            Rect objectFieldRect = r;
-            objectFieldRect.x = textFieldRect.xMax + 1f;
-            objectFieldRect.width = 19f;
-
-            if (GUI.Button(objectFieldRect, "", GUI.skin.GetStyle("IN ObjectField")))
+            if (GUI.Button(folderSelectionRect, "", GUI.skin.GetStyle("IN ObjectField")))
             {
                 string path = EditorUtility.OpenFolderPanel("Select a folder", "Assets", "");
                 if (path.Contains(Application.dataPath))
@@ -107,6 +157,7 @@ namespace Dessentials.Serializables
                     path = "Assets" + path.Substring(Application.dataPath.Length);
                     obj = AssetDatabase.LoadAssetAtPath(path, typeof(DefaultAsset));
                     guid.stringValue = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(obj));
+                    property.serializedObject.ApplyModifiedProperties();
                 }
                 else
                     Debug.LogError("The path must be in the Assets folder");
