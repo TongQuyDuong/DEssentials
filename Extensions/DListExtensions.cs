@@ -17,6 +17,18 @@ namespace Dessentials.Extensions
             T random = list[UnityEngine.Random.Range(0, list.Count)];
             return random;
         }
+        
+        public static T GetRandomFromCollection<T>(this IEnumerable<T> list)
+        {
+            var enumerable = list as T[] ?? list.ToArray();
+            if (!enumerable.Any()) return default(T);
+            
+            UnityEngine.Random.InitState(Guid.NewGuid().GetHashCode());
+
+            T random = enumerable[UnityEngine.Random.Range(0, enumerable.Length)];
+            return random;
+        }
+        
         public static List<T> GetRandomElements<T>(this IEnumerable<T> list, int elementsCount)
         {
             return list.OrderBy(arg => Guid.NewGuid()).Take(elementsCount).ToList();
