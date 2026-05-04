@@ -12,7 +12,7 @@ namespace Dessentials.Features.QuickAccess
     /// <summary>
     /// Editor window providing fast access to scenes, configurable groups of folders, and pinned shortcuts.
     /// Drag-drop into a group:
-    ///   • all folders, no Shift → added as roots (auto-loaded into group)
+    ///   • all folders, no Shift → added as roots (autoloaded into group)
     ///   • Shift held, or any non-folder → pinned (reference-only)
     /// Drops outside any group are rejected.
     /// </summary>
@@ -494,8 +494,25 @@ namespace Dessentials.Features.QuickAccess
             if (asset == null) return;
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(Content.Ping, Layouts.Ping))                          EditorGUIUtility.PingObject(asset);
-            if (GUILayout.Button(asset.name, Styles.AssetButton, Layouts.AssetName))   AssetDatabase.OpenAsset(asset);
+            
+            if (GUILayout.Button(Content.Ping, Layouts.Ping))
+            {
+                EditorGUIUtility.PingObject(asset);
+                
+                if (AssetDatabase.OpenAsset(asset))
+                {
+                    EditorApplication.ExecuteMenuItem("Window/General/Inspector");
+                }
+            }
+            
+            if (GUILayout.Button(asset.name, Styles.AssetButton, Layouts.AssetName))
+            {
+                if (AssetDatabase.OpenAsset(asset))
+                {
+                    EditorApplication.ExecuteMenuItem("Window/General/Inspector");
+                }
+            }
+            
             if (DangerButton(Content.Remove, Layouts.Remove))                          RemoveAsset(asset, source, groupIndex);
             GUILayout.EndHorizontal();
         }
