@@ -100,10 +100,6 @@ namespace Dessentials.Serializables
         [HideInInspector]
         public string serializedValue = "None";
 
-#if ODIN_INSPECTOR
-        [ShowInInspector]
-        [HideLabel]
-#endif
         public TEnum Value
         {
             get
@@ -111,12 +107,12 @@ namespace Dessentials.Serializables
                 if (Enum.TryParse<TEnum>(serializedValue, out var result))
                     return result;
 
-                Debug.LogError($"Failed to get LevelDifficultType {nameof(TEnum)} : {serializedValue}");
+                Debug.LogError($"Failed to get Enum {nameof(TEnum)} : {serializedValue}");
 
                 var val = Enum.GetValues(typeof(TEnum)).Cast<TEnum>().Min();
-                
+
                 serializedValue = val.ToString();
-                    
+
                 return val;
             }
 
@@ -124,3 +120,41 @@ namespace Dessentials.Serializables
         }
     }
 }
+
+#if UNITY_EDITOR
+namespace Dessentials.Serializables
+{
+    using UnityEditor;
+
+    [CustomPropertyDrawer(typeof(StringSerializedEnum<>))]
+    public class StringSerializedEnumDrawer : PropertyDrawer
+    {
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            var serializedValueProp = property.FindPropertyRelative("serializedValue");
+
+            var enumType = fieldInfo.FieldType;
+            if (enumType.IsGenericType)
+                enumType = enumType.GetGenericArguments()[0];
+
+            Enum currentValue;
+            if (!string.IsNullOrEmpty(serializedValueProp.stringValue)
+                && Enum.IsDefined(enumType, serializedValueProp.stringValue))
+            {
+                currentValue = (Enum)Enum.Parse(enumType, serializedValueProp.stringValue);
+            }
+            else
+            {
+                currentValue = (Enum)Enum.GetValues(enumType).GetValue(0);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            var newValue = EditorGUI.EnumPopup(position, label, currentValue);
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedValueProp.stringValue = newValue.ToString();
+            }
+        }
+    }
+}
+#endif
