@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Newtonsoft.Json;
+
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
@@ -135,15 +137,15 @@ namespace Dessentials.Features.ABTesting
 	    [Button]
 	    public void CopyJsonToClipboard()
 	    {
-		    var textToCopy = JsonUtility.ToJson(DefaultValue, false);
-		    
-		    GUIUtility.systemCopyBuffer = textToCopy;
-		    Debug.Log("Text copied to clipboard: " + textToCopy);
-	    }
+			var textToCopy = JsonConvert.SerializeObject(DefaultValue);
+
+			GUIUtility.systemCopyBuffer = textToCopy;
+			Debug.Log("Text copied to clipboard: " + textToCopy);
+		}
 #endif
-			
-	    private T GetValueFromString(string serializedValue)
-	    {
+
+		private T GetValueFromString(string serializedValue)
+		{
 		    try
 		    {
 			    switch (Type.GetTypeCode(typeof(T)))
@@ -159,14 +161,14 @@ namespace Dessentials.Features.ABTesting
 				    case TypeCode.Boolean:
 					    return (T)Convert.ChangeType(Convert.ToBoolean(serializedValue), typeof(T));
 				    default:
-					    return JsonUtility.FromJson<T>(serializedValue);
-			    }
-		    }
-		    catch (Exception ex)
-		    {
-			    Debug.LogException(ex);
-			    return default;
-		    }
+						return JsonConvert.DeserializeObject<T>(serializedValue);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+				return default;
+			}
 	    }
     }
 }
