@@ -1,34 +1,40 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Dessentials.Common
+﻿namespace Dessentials.Common
 {
     // Note: This singleton is used for classes that are not mono-targeted ones.
     // For mono-targeted ones, use MonoSingleton instead.
-    // The differerence between the two is this singleton remains constantly through scenes, 
+    // The differerence between the two is this singleton remains constantly through scenes,
     // therefore its data stays in memory all the time unless getting disposed properly.
     // In contrast with it, the MonoSingleton only exists in a scene, and once a new scene's loaded,
     // everything belongs to that MonoSingleton will be got rid.
-    public static class Singleton
+    public class Singleton<T> where T : class, new()
     {
-        #region Class Methods
+        #region Members
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Of<T>() where T : class, new()
-            => Single<T>.Instance;
+        private static T s_instance;
 
-        #endregion Class Methods
+        #endregion Members
 
-        #region Owner Classes
+        #region Properties
 
-        private static class Single<T> where T : class, new()
+        public static T Instance
         {
-            #region Membres
-
-            public static readonly T Instance = new T();
-
-            #endregion Members
+            get
+            {
+                if (s_instance == null)
+                    s_instance = new T();
+                return s_instance;
+            }
         }
 
-        #endregion Owner Classes
+        #endregion Properties
+
+        #region Class Methods
+
+        protected virtual void Dispose()
+        {
+            s_instance = null;
+        }
+
+        #endregion Class Methods
     }
 }
