@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Newtonsoft.Json;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -137,7 +135,7 @@ namespace Dessentials.Features.ABTesting
 	    [Button]
 	    public void CopyJsonToClipboard()
 	    {
-			var textToCopy = JsonConvert.SerializeObject(DefaultValue);
+			var textToCopy = Newtonsoft.Json.JsonConvert.SerializeObject(DefaultValue);
 
 			GUIUtility.systemCopyBuffer = textToCopy;
 			Debug.Log("Text copied to clipboard: " + textToCopy);
@@ -161,7 +159,7 @@ namespace Dessentials.Features.ABTesting
 				    case TypeCode.Boolean:
 					    return (T)Convert.ChangeType(Convert.ToBoolean(serializedValue), typeof(T));
 				    default:
-						return JsonConvert.DeserializeObject<T>(serializedValue);
+					    return DeserializeComplex(serializedValue);
 				}
 			}
 			catch (Exception ex)
@@ -169,6 +167,30 @@ namespace Dessentials.Features.ABTesting
 				Debug.LogException(ex);
 				return default;
 			}
+	    }
+
+	    // JsonUtility can't deserialize a top-level array/list. When T is a collection,
+	    // wrap the json under a field whose type is T itself, then unwrap. No reflection:
+	    // the nested Wrapper closes over T, so the field is already the right type.
+	    private T DeserializeComplex(string json)
+	    {
+		    var type = typeof(T);
+		    bool isCollection = type.IsArray ||
+			    (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>));
+
+		    if (isCollection)
+		    {
+			    var wrapper = JsonUtility.FromJson<Wrapper>("{\"value\":" + json + "}");
+			    return wrapper.value;
+		    }
+
+		    return JsonUtility.FromJson<T>(json);
+	    }
+
+	    [Serializable]
+	    private class Wrapper
+	    {
+		    public T value;
 	    }
     }
 }
