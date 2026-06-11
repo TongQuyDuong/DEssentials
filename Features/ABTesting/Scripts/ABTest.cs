@@ -133,9 +133,11 @@ namespace Dessentials.Features.ABTesting
 
 #if UNITY_EDITOR
 	    [Button]
-	    public void CopyJsonToClipboard()
+	    public void CopyJsonToClipboard(bool useNewtonsoft)
 	    {
-			var textToCopy = Newtonsoft.Json.JsonConvert.SerializeObject(DefaultValue);
+			var textToCopy = useNewtonsoft
+				? Newtonsoft.Json.JsonConvert.SerializeObject(DefaultValue)
+				: JsonUtility.ToJson(DefaultValue);
 
 			GUIUtility.systemCopyBuffer = textToCopy;
 			Debug.Log("Text copied to clipboard: " + textToCopy);
