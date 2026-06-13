@@ -47,8 +47,6 @@ namespace Dessentials.Common.UI
 
 #if ODIN_INSPECTOR
         [Button]
-#else
-		[InspectorButton]
 #endif
         private void Validate()
         {

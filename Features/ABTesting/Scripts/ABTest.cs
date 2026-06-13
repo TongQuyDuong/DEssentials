@@ -120,7 +120,9 @@ namespace Dessentials.Features.ABTesting
 		    return FetchedValue;
 	    }
 
+#if ODIN_INSPECTOR
 	    [Button("Import Default From String")]
+#endif
 	    public void ImportDefaultFromString(string value)
 	    {
 		    DefaultValue = GetValueFromString(value);
@@ -132,7 +134,9 @@ namespace Dessentials.Features.ABTesting
 	    }
 
 #if UNITY_EDITOR
+#if ODIN_INSPECTOR
 	    [Button]
+#endif
 	    public void CopyJsonToClipboard(bool useNewtonsoft)
 	    {
 			var textToCopy = useNewtonsoft

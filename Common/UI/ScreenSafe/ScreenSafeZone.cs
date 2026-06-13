@@ -32,8 +32,6 @@ namespace Dessentials.Common.UI
 
 #if ODIN_INSPECTOR
 		[Button]
-#else
-		[InspectorButton]
 #endif
 		public void Log()
 		{
@@ -52,8 +50,6 @@ namespace Dessentials.Common.UI
 
 #if ODIN_INSPECTOR
 		[Button]
-#else
-		[InspectorButton]
 #endif
 		private void Validate()
 		{
@@ -105,15 +101,11 @@ namespace Dessentials.Common.UI
 
 #if ODIN_INSPECTOR
 		[Button]
-#else
-		[InspectorButton]
 #endif
 		private void TestTopOffsetForBannerAd(int height) => SetTopOffsetForBannerAd(height);
 
 #if ODIN_INSPECTOR
 		[Button]
-#else
-		[InspectorButton]
 #endif
 		private void TestBottomOffsetForBannerAd(int height) => SetBottomOffsetForBannerAd(height);
 
