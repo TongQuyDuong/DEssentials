@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Dessentials.Common.EntityManagement
 {
-    public static partial class EntityRegistry<T> where T : MonoBehaviour
+    public static partial class ManagedEntityRegistry<T> where T : ManagedEntity<T>
     {
         private static readonly List<T> s_entities = new();
 
@@ -36,6 +36,14 @@ namespace Dessentials.Common.EntityManagement
         public static void Unregister(T entity)
         {
             s_entities.Remove(entity);
+        }
+
+        public static bool TryUnregister(GameObject go)
+        {
+            if (go == null) return false;
+            if (!go.TryGetComponent<T>(out var component)) return false;
+
+            return s_entities.Remove(component);
         }
 
         public static T Query(SelectionFilter filter)
