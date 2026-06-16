@@ -42,7 +42,7 @@ namespace Dessentials.Common.EntityManagement
                 instance = Object.Instantiate(prefab, parent).GetComponent<TObject>();
             }
 
-            instance.State = ManagedEntityState.InRegistry;
+            instance.ManagedEntityState = ManagedEntityState.InRegistry;
             ManagedEntityRegistry<TObject>.Register(instance);
             return instance;
         }
@@ -50,7 +50,7 @@ namespace Dessentials.Common.EntityManagement
         public static void Return(TObject obj)
         {
             ManagedEntityRegistry<TObject>.Unregister(obj);
-            obj.State = ManagedEntityState.InPool;
+            obj.ManagedEntityState = ManagedEntityState.InPool;
             obj.gameObject.SetActive(false);
             s_pool.Push(obj);
         }
@@ -76,7 +76,7 @@ namespace Dessentials.Common.EntityManagement
             for (int i = 0; i < count; i++)
             {
                 var instance = Object.Instantiate(prefab, parent).GetComponent<TObject>();
-                instance.State = ManagedEntityState.InPool;
+                instance.ManagedEntityState = ManagedEntityState.InPool;
                 instance.gameObject.SetActive(false);
                 s_pool.Push(instance);
             }

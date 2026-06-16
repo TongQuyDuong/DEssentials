@@ -22,7 +22,7 @@ namespace Dessentials.Common.EntityManagement
     public class ManagedEntity<TSelf> : MonoBehaviour
     where TSelf : ManagedEntity<TSelf>
     {
-        public ManagedEntityState State { get; set; }
+        public ManagedEntityState ManagedEntityState { get; set; }
 
         /// Returns this entity to the factory pool. Override to add cleanup before pooling.
         public virtual void Dispose()
@@ -33,7 +33,7 @@ namespace Dessentials.Common.EntityManagement
         /// Safety net: cleans up stale references when Unity destroys this object unexpectedly.
         protected virtual void OnDestroy()
         {
-            switch (State)
+            switch (ManagedEntityState)
             {
                 case ManagedEntityState.InRegistry:
                     ManagedEntityRegistry<TSelf>.Unregister((TSelf)this);
