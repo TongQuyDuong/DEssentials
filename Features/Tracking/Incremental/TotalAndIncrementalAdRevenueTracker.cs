@@ -50,18 +50,14 @@ namespace Dessentials.Features.Tracking
             var adsRevenueDataProvider = IRevenueDataProvider.Global;
             if (adsRevenueDataProvider == null) return;
             
-            adsRevenueDataProvider.TotalAdsRevenue += revenue;
-            adsRevenueDataProvider.LastestAdsRevenue = revenue;
+            adsRevenueDataProvider.HandleNewAdRevenuePaid(revenue);
             
             IBambooTracker.Global?.HandleOnNewAdRevenuePaid();
             ITaichiTracker.Global?.HandleOnNewAdRevenuePaid();
             
-            if (IFirebaseAnalytics.Exist)
-            {
-                IFirebaseAnalytics.Global
-                    .SetUserProperty("monet_ads_value",
-                        adsRevenueDataProvider.TotalAdsRevenue.ToString("0.000"));
-            }
+            IFirebaseAnalytics.Global?
+                .SetUserProperty("monet_ads_value",
+                    adsRevenueDataProvider.TotalAdsRevenue.ToString("0.000"));
         }
 
         private void TrackIncrementalAdsRevenue(Zego.AdPaidEvent e)
