@@ -1,6 +1,7 @@
 #if DESSENTIALS_SRDEBUGGER
 using System.ComponentModel;
 using Dessentials.Common.Utility;
+using Dessentials.Features.Tracking;
 
 public partial class SROptions
 {
