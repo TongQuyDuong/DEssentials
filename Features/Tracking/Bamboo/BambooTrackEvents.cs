@@ -1,114 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Dessentials.Common;
 using Dessentials.Common.GlobalServices;
 using UnityEngine;
 #if DESSENTIALS_ZEGO_SDK
 using Zego;
 using Firebase.Analytics;
-
 #else
 using Dessentials.Common.ServiceLocator;
 #endif
 
 namespace Dessentials.Features.Tracking
 {
-    public interface IAlreadyTrackedEventsProvider : IGlobalService<IAlreadyTrackedEventsProvider>
-    {
-        public List<string> AlreadyTrackedEvents { get; }
-        public Dictionary<string, List<int>> AlreadyTrackedIntervals { get; }
-
-        public void OnNewBambooEventTracked(string eventName)
-        {
-            if (AlreadyTrackedEvents == null)
-            {
-#if DESSENTIALS_DEBUG_LOG_IN_BUILD || UNITY_EDITOR
-                Debug.LogError("AlreadyTrackedEvents null");
-#endif
-                return;
-            }
-
-            if (!AlreadyTrackedEvents.Contains(eventName))
-            {
-                AlreadyTrackedEvents.Add(eventName);
-
-#if DESSENTIALS_DEBUG_LOG_IN_BUILD || UNITY_EDITOR
-                Debug.Log(
-                    $"[BambooTracker] {eventName} has been fired, total bamboo tracked events: {AlreadyTrackedEvents.Count}");
-#endif
-            }
-        }
-        
-        public void OnIntervalBambooEventTracked(string eventName, int trackValue)
-        {
-            if (AlreadyTrackedIntervals == null)
-            {
-#if DESSENTIALS_DEBUG_LOG_IN_BUILD || UNITY_EDITOR
-                Debug.LogError("AlreadyTrackedIntervals null");
-#endif
-                return;
-            }
-
-            if (AlreadyTrackedIntervals.Keys.All(name => name != eventName))
-            {
-                AlreadyTrackedIntervals.Add(eventName, new List<int> { trackValue });
-            }
-            else
-            {
-                AlreadyTrackedIntervals[eventName].Add(trackValue);
-            }
-            
-#if DESSENTIALS_DEBUG_LOG_IN_BUILD || UNITY_EDITOR
-            Debug.Log(
-                $"[BambooTracker] {eventName} has been fired, total bamboo tracked events: {AlreadyTrackedIntervals[eventName].Count}");
-#endif
-        }
-    }
-
-    public interface IRevenueDataProvider : IGlobalService<IRevenueDataProvider>
-    {
-        public double FirstAdRevenue { get; }
-        public double TotalAdsRevenue { get; set; }
-        public Dictionary<string, double> IntervalAdsRevenueDict { get; }
-        public double LastestAdsRevenue { get; set; }
-        public double TotalIAPRevenue { get; }
-        public double LastIAPRevenue { get; }
-
-        public double LTV => TotalAdsRevenue + TotalIAPRevenue;
-
-        public double AdsIncrementalValueSingleBidding { get; set; }
-        public double AdsIncrementalValueMultiBidding { get; set; }
-
-        public void HandleNewAdRevenuePaid(double revenue)
-        {
-            TotalAdsRevenue += revenue;
-            LastestAdsRevenue = revenue;
-
-            if (IntervalAdsRevenueDict != null)
-            {
-                foreach (var key in IntervalAdsRevenueDict.Keys)
-                {
-                    IntervalAdsRevenueDict[key] += revenue;
-                }
-            }
-        }
-
-        public void TryRegisterIntervalEvent(string eventName)
-        {
-            IntervalAdsRevenueDict?.TryAdd(eventName, 0);
-        }
-
-        public void ClearIntervalAdsRevenue(string eventName)
-        {
-            if (IntervalAdsRevenueDict != null
-                && IntervalAdsRevenueDict.ContainsKey(eventName))
-            {
-                IntervalAdsRevenueDict[eventName] = 0;
-            }
-        }
-    }
-
     public abstract class BaseBambooTrackEvent
     {
         protected bool m_initialized = false;
@@ -232,7 +132,7 @@ namespace Dessentials.Features.Tracking
                 new("currency", "USD")
             };
 
-            Debug.Log($"[BambooTracker] Firing {_eventName}");
+            Debug.Log($"[BambooTracker] Firing {_eventName} with revenue: {revenueValue}");
 
             IFirebaseAnalytics.Global?.LogEvent(_eventName, _paramTotal);
 #else

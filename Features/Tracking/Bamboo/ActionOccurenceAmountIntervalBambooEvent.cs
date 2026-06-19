@@ -16,6 +16,7 @@ namespace Dessentials.Features.Tracking
             base.TrackBambooEventFirstTime();
             
             IRevenueDataProvider.Global?.TryRegisterIntervalEvent(_eventName);
+            IAlreadyTrackedEventsProvider.Global?.OnIntervalBambooEventTracked(_eventName, _actionOccurenceAmountReportThreshold);
         }
 
         public override void TrackBambooEventAdditionalTimes()
