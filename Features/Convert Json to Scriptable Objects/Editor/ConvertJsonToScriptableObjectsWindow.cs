@@ -19,7 +19,7 @@ namespace Dessentials.Features.ConvertJsonToScriptableObjects
         private SerializedObject _serializedObject;
         private SerializedProperty _outputFolderProperty;
 
-        [MenuItem("Assets/Convert JSON to Scriptable Objects", false, 50)]
+        [MenuItem("Assets/Dessentials/Convert JSON to Scriptable Objects", false, 50)]
         private static void OpenFromContextMenu()
         {
             var window = GetWindow<ConvertJsonToScriptableObjectsWindow>("Convert JSON to SO");
@@ -27,7 +27,7 @@ namespace Dessentials.Features.ConvertJsonToScriptableObjects
             window.Show();
         }
 
-        [MenuItem("Assets/Convert JSON to Scriptable Objects", true)]
+        [MenuItem("Assets/Dessentials/Convert JSON to Scriptable Objects", true)]
         private static bool ValidateOpenFromContextMenu()
         {
             foreach (var obj in Selection.objects)
