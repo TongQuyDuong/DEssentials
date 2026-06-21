@@ -44,12 +44,14 @@ namespace Dessentials.Common.EntityManagement
 
             instance.ManagedEntityState = ManagedEntityState.InRegistry;
             ManagedEntityRegistry<TObject>.Register(instance);
+            Registry<IDisposableEntity>.Register(instance);
             return instance;
         }
 
         public static void Return(TObject obj)
         {
             ManagedEntityRegistry<TObject>.Unregister(obj);
+            Registry<IDisposableEntity>.Unregister(obj);
             obj.ManagedEntityState = ManagedEntityState.InPool;
             obj.gameObject.SetActive(false);
             s_pool.Push(obj);

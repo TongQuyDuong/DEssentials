@@ -19,7 +19,7 @@ namespace Dessentials.Common.EntityManagement
     ///   - Call Dispose() to return an entity to the pool. Override it to add cleanup logic.
     ///   - If a managed entity is destroyed without being returned (e.g. scene unload),
     ///     OnDestroy auto-cleans: unregisters if active, or purges the pool if pooled.
-    public class ManagedEntity<TSelf> : MonoBehaviour
+    public class ManagedEntity<TSelf> : MonoBehaviour, IDisposableEntity
     where TSelf : ManagedEntity<TSelf>
     {
         public ManagedEntityState ManagedEntityState { get; set; }
