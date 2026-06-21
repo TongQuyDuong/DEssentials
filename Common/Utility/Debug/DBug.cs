@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Dessentials.Common.Utility
@@ -43,6 +44,12 @@ namespace Dessentials.Common.Utility
         {
             if (m_Enabled)
                 Debug.LogError(message);
+        }
+
+        public static void LogException(Exception e)
+        {
+            if (m_Enabled)
+                Debug.LogException(e);
         }
     }
 }
