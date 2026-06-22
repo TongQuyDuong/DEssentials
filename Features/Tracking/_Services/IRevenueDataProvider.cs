@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Dessentials.Serializables;
 #if DESSENTIALS_ZEGO_SDK
 using Zego;
 #else
@@ -12,7 +13,7 @@ namespace Dessentials.Features.Tracking
     {
         public double FirstAdRevenue { get; }
         public double TotalAdsRevenue { get; set; }
-        public Dictionary<string, double> IntervalAdsRevenueDict { get; }
+        public SerializableDictionary<string, double> IntervalAdsRevenueDict { get; }
         public double LastestAdsRevenue { get; set; }
         public double TotalIAPRevenue { get; }
         public double LastIAPRevenue { get; }
