@@ -43,6 +43,12 @@ Properties {
 	_UnderlayDilate		("Border Dilate", Range(-1,1)) = 0
 	_UnderlaySoftness	("Border Softness", Range(0,1)) = 0
 
+	[HDR]_Underlay1Color	("Underlay1 Color", Color) = (0,0,0, 0.5)
+	_Underlay1OffsetX	("Underlay1 OffsetX", Range(-1,1)) = 0
+	_Underlay1OffsetY	("Underlay1 OffsetY", Range(-1,1)) = 0
+	_Underlay1Dilate	("Underlay1 Dilate", Range(-1,1)) = 0
+	_Underlay1Softness	("Underlay1 Softness", Range(0,1)) = 0
+
 	[HDR]_GlowColor			("Color", Color) = (0, 1, 0, 0.5)
 	_GlowOffset			("Offset", Range(-1,1)) = 0
 	_GlowInner			("Inner", Range(0,1)) = 0.05
@@ -117,6 +123,7 @@ SubShader {
 		#pragma fragment PixShader
 		#pragma shader_feature __ BEVEL_ON
 		#pragma shader_feature __ UNDERLAY_ON UNDERLAY_INNER
+		#pragma shader_feature __ UNDERLAY1_ON
 		#pragma shader_feature __ GLOW_ON
 
 		#pragma multi_compile __ UNITY_UI_CLIP_RECT
@@ -152,6 +159,10 @@ SubShader {
 			fixed4	underlayColor	: COLOR1;
 		#endif
 			float4 textures			: TEXCOORD5;
+		#if UNDERLAY1_ON
+			float4	texcoord3		: TEXCOORD6;		// u,v, scale, bias
+			fixed4	underlay1Color	: COLOR2;
+		#endif
 		};
 
 		// Used by Unity internally to handle Texture Tiling and Offset.
@@ -207,6 +218,18 @@ SubShader {
 			float2 bOffset = float2(x, y);
 		#endif
 
+		#if UNDERLAY1_ON
+			// Glyph-consistent convention (not the underlay coverage form) so the pixel
+			// shader can union it with the glyph via min(sd, sd1).
+			float u1Scale = scale;
+			u1Scale /= 1 + ((_Underlay1Softness*_ScaleRatioC) * u1Scale);
+			float u1Bias = (0.5 - weight) + (0.5 / u1Scale) - ((_Underlay1Dilate * _ScaleRatioC) * 0.5);
+
+			float x1 = -(_Underlay1OffsetX * _ScaleRatioC) * _GradientScale / _TextureWidth;
+			float y1 = -(_Underlay1OffsetY * _ScaleRatioC) * _GradientScale / _TextureHeight;
+			float2 u1Offset = float2(x1, y1);
+		#endif
+
 			// Generate UV for the Masking Texture
 			float4 clampedRect = clamp(_ClipRect, -2e10, 2e10);
 			float2 maskUV = (vert.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
@@ -228,6 +251,12 @@ SubShader {
 			output.underlayColor =	underlayColor;
 			#endif
 			output.textures = float4(faceUV, outlineUV);
+			#if UNDERLAY1_ON
+			output.texcoord3 = float4(input.texcoord0 + u1Offset, u1Scale, u1Bias);
+			fixed4 underlay1Color = _Underlay1Color;
+			underlay1Color.rgb *= underlay1Color.a;
+			output.underlay1Color =	underlay1Color;
+			#endif
 
 			return output;
 		}
@@ -239,7 +268,7 @@ SubShader {
 
 			float c = tex2D(_MainTex, input.atlas).a;
 
-		#ifndef UNDERLAY_ON
+		#if !defined(UNDERLAY_ON) && !defined(UNDERLAY1_ON)
 			clip(c - input.param.x);
 		#endif
 
@@ -259,7 +288,21 @@ SubShader {
 			faceColor *= tex2D(_FaceTex, input.textures.xy + float2(_FaceUVSpeedX, _FaceUVSpeedY) * _Time.y);
 			outlineColor *= tex2D(_OutlineTex, input.textures.zw + float2(_OutlineUVSpeedX, _OutlineUVSpeedY) * _Time.y);
 
+		#if UNDERLAY1_ON
+			// Underlay1: signed distance of the offset/dilated shape, in the glyph's convention.
+			float c1 = tex2D(_MainTex, input.texcoord3.xy).a;
+			float sd1 = (input.texcoord3.w - c1) * input.texcoord3.z;
+			// Union silhouette (glyph ∪ Underlay1) → the outline wraps both.
+			float sdUnion = min(sd, sd1);
+			// Outline ring around the union, interior filled with Underlay1 color.
+			fixed4 unionColor = GetColor(sdUnion, input.underlay1Color, outlineColor, outline, softness);
+			// Pure glyph face, no separate outline (the union outline is shared).
+			fixed4 pureFace = GetColor(sd, faceColor, faceColor, 0, softness);
+			// Premultiplied "face over (outline+U1)": face on top, U1 fill over outline.
+			faceColor = pureFace + (1 - pureFace.a) * unionColor;
+		#else
 			faceColor = GetColor(sd, faceColor, outlineColor, outline, softness);
+		#endif
 
 		#if BEVEL_ON
 			float3 dxy = float3(0.5 / _TextureWidth, 0.5 / _TextureHeight, 0);

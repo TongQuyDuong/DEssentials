@@ -43,6 +43,12 @@ uniform float		_UnderlayOffsetY;			// v[-1, 1]
 uniform float		_UnderlayDilate;			// v[-1, 1]
 uniform float		_UnderlaySoftness;			// v[ 0, 1]
 
+uniform fixed4		_Underlay1Color;			// RGBA : Color + Opacity
+uniform float		_Underlay1OffsetX;			// v[-1, 1]
+uniform float		_Underlay1OffsetY;			// v[-1, 1]
+uniform float		_Underlay1Dilate;			// v[-1, 1]
+uniform float		_Underlay1Softness;			// v[ 0, 1]
+
 uniform fixed4 		_GlowColor;					// RGBA : Color + Intesity
 uniform float 		_GlowOffset;				// v[-1, 1]
 uniform float 		_GlowOuter;					// v[ 0, 1]

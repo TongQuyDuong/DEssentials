@@ -6,9 +6,9 @@ namespace Dessentials.Editor.Shaders
 {
     public class TMP_SDFShaderGUI : TMP_BaseShaderGUI
     {
-        static ShaderFeature s_OutlineFeature, s_UnderlayFeature, s_BevelFeature, s_GlowFeature, s_MaskFeature;
+        static ShaderFeature s_OutlineFeature, s_UnderlayFeature, s_Underlay1Feature, s_BevelFeature, s_GlowFeature, s_MaskFeature;
 
-        static bool s_Face = true, s_Outline = true, s_Outline2, s_Underlay, s_Lighting, s_Glow, s_Bevel, s_Light, s_Bump, s_Env;
+        static bool s_Face = true, s_Outline = true, s_Outline2, s_Underlay, s_Underlay1, s_Lighting, s_Glow, s_Bevel, s_Light, s_Bump, s_Env;
 
         static string[]
             s_FaceUVSpeedName = { "_FaceUVSpeed" },
@@ -32,6 +32,12 @@ namespace Dessentials.Editor.Shaders
                 {
                     new GUIContent("None"), new GUIContent("Normal"), new GUIContent("Inner")
                 }
+            };
+
+            s_Underlay1Feature = new ShaderFeature()
+            {
+                undoLabel = "Underlay 1",
+                keywords = new[] { "UNDERLAY1_ON" }
             };
 
             s_BevelFeature = new ShaderFeature()
@@ -87,9 +93,20 @@ namespace Dessentials.Editor.Shaders
                 EndPanel();
             }
 
+            if (m_Material.HasProperty("_Underlay1Color"))
+            {
+                s_Underlay1 = BeginPanel("Underlay 1", s_Underlay1Feature, s_Underlay1);
+                if (s_Underlay1)
+                {
+                    DoUnderlay1Panel();
+                }
+
+                EndPanel();
+            }
+
             if (m_Material.HasProperty(ShaderUtilities.ID_UnderlayColor))
             {
-                s_Underlay = BeginPanel("Underlay", s_UnderlayFeature, s_Underlay);
+                s_Underlay = BeginPanel("Underlay 2", s_UnderlayFeature, s_Underlay);
                 if (s_Underlay)
                 {
                     DoUnderlayPanel();
@@ -299,6 +316,18 @@ namespace Dessentials.Editor.Shaders
             DoSlider("_UnderlayOffsetY", "Offset Y");
             DoSlider("_UnderlayDilate", "Dilate");
             DoSlider("_UnderlaySoftness", "Softness");
+            EditorGUI.indentLevel -= 1;
+            EditorGUILayout.Space();
+        }
+
+        void DoUnderlay1Panel()
+        {
+            EditorGUI.indentLevel += 1;
+            DoColor("_Underlay1Color", "Color");
+            DoSlider("_Underlay1OffsetX", "Offset X");
+            DoSlider("_Underlay1OffsetY", "Offset Y");
+            DoSlider("_Underlay1Dilate", "Dilate");
+            DoSlider("_Underlay1Softness", "Softness");
             EditorGUI.indentLevel -= 1;
             EditorGUILayout.Space();
         }
