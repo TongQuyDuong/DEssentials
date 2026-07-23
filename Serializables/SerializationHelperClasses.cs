@@ -36,7 +36,7 @@ namespace Dessentials.Serializables
     }
     
     [Serializable]
-    public struct EnumTypedGameObject<TEnum> : IEquatable<EnumTypedGameObject<TEnum>> where TEnum : Enum
+    public struct EnumTypedGameObject<TEnum> : IEquatable<EnumTypedGameObject<TEnum>> where TEnum : struct, Enum
     {
         public TEnum type;
         public GameObject gameObject;

@@ -205,6 +205,10 @@ SubShader {
 
 			alphaClip = alphaClip / 2.0 - ( .5 / scale) - weight;
 
+			// Shift the glyph opposite to Underlay1's offset by an equal distance,
+			// so moving Underlay1 pushes the original glyph the other way.
+			float2 glyphOffset = 0;
+
 		#if (UNDERLAY_ON || UNDERLAY_INNER)
 			float4 underlayColor = _UnderlayColor;
 			underlayColor.rgb *= underlayColor.a;
@@ -228,6 +232,7 @@ SubShader {
 			float x1 = -(_Underlay1OffsetX * _ScaleRatioC) * _GradientScale / _TextureWidth;
 			float y1 = -(_Underlay1OffsetY * _ScaleRatioC) * _GradientScale / _TextureHeight;
 			float2 u1Offset = float2(x1, y1);
+			glyphOffset -= u1Offset;
 		#endif
 
 			// Generate UV for the Masking Texture
@@ -242,7 +247,7 @@ SubShader {
 
 			output.position = vPosition;
 			output.color = input.color;
-			output.atlas =	input.texcoord0;
+			output.atlas =	input.texcoord0 + glyphOffset;
 			output.param =	float4(alphaClip, scale, bias, weight);
 			output.mask = half4(vert.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_MaskSoftnessX, _MaskSoftnessY) + pixelSize.xy));
 			output.viewDir =	mul((float3x3)_EnvMatrix, _WorldSpaceCameraPos.xyz - mul(unity_ObjectToWorld, vert).xyz);
