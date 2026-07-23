@@ -9,8 +9,10 @@ float2 UnpackUV(float uv)
 
 fixed4 GetColor(half d, fixed4 faceColor, fixed4 outlineColor, half outline, half softness)
 {
-	half faceAlpha = 1-saturate((d - outline * 0.5 + softness * 0.5) / (1.0 + softness));
-	half outlineAlpha = saturate((d + outline * 0.5)) * sqrt(min(1.0, outline));
+	// Outline grows outward from the glyph edge (d=0) instead of centered on it,
+	// so widening the outline no longer eats into the letterforms.
+	half faceAlpha = 1-saturate((d - outline + softness * 0.5) / (1.0 + softness));
+	half outlineAlpha = saturate(d) * sqrt(min(1.0, outline));
 
 	faceColor.rgb *= faceColor.a;
 	outlineColor.rgb *= outlineColor.a;
