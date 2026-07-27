@@ -14,7 +14,7 @@ namespace Dessentials.Features.ABTesting
     public partial class ABTestManager : SingletonScriptableObject<ABTestManager>
     {
 #if ODIN_INSPECTOR && UNITY_EDITOR
-	    [TitleGroup("General")]
+	    [TabGroup("ABTests", "General")]
 #endif
 	    [RegisteredABTest]
 	    [SerializeField]
