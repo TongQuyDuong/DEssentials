@@ -140,12 +140,60 @@ namespace Dessentials.Features.ABTesting
 	    public void CopyJsonToClipboard(bool useNewtonsoft)
 	    {
 			var textToCopy = useNewtonsoft
-				? Newtonsoft.Json.JsonConvert.SerializeObject(DefaultValue)
-				: JsonUtility.ToJson(DefaultValue);
+				? Newtonsoft.Json.JsonConvert.SerializeObject(DefaultValue, RoundedFloatSettings)
+				: RoundJsonFloats(JsonUtility.ToJson(DefaultValue));
 
 			GUIUtility.systemCopyBuffer = textToCopy;
 			Debug.Log("Text copied to clipboard: " + textToCopy);
 		}
+
+	    private const int FLOAT_ROUND_DIGITS = 6;
+
+	    // Rounds float/double values so serialization doesn't emit the long float->double
+	    // precision tails (e.g. 0.30000001192092896).
+	    private static readonly Newtonsoft.Json.JsonSerializerSettings RoundedFloatSettings =
+		    new Newtonsoft.Json.JsonSerializerSettings
+		    {
+			    Converters = { new RoundedFloatConverter(), new RoundedDoubleConverter() }
+		    };
+
+	    // JsonUtility.ToJson doesn't support custom converters, so round the numeric literals
+	    // in the produced JSON string. Only touches tokens with a decimal point, leaving
+	    // integers untouched.
+	    private static string RoundJsonFloats(string json)
+	    {
+		    if (string.IsNullOrEmpty(json))
+			    return json;
+
+		    return System.Text.RegularExpressions.Regex.Replace(
+			    json,
+			    @"-?\d+\.\d+(?:[eE][-+]?\d+)?",
+			    match =>
+			    {
+				    var rounded = Math.Round(
+					    double.Parse(match.Value, System.Globalization.CultureInfo.InvariantCulture),
+					    FLOAT_ROUND_DIGITS);
+				    return rounded.ToString(System.Globalization.CultureInfo.InvariantCulture);
+			    });
+	    }
+
+	    private class RoundedFloatConverter : Newtonsoft.Json.JsonConverter<float>
+	    {
+		    public override void WriteJson(Newtonsoft.Json.JsonWriter writer, float value, Newtonsoft.Json.JsonSerializer serializer)
+			    => writer.WriteValue((float)Math.Round(value, FLOAT_ROUND_DIGITS));
+
+		    public override float ReadJson(Newtonsoft.Json.JsonReader reader, Type objectType, float existingValue, bool hasExistingValue, Newtonsoft.Json.JsonSerializer serializer)
+			    => Convert.ToSingle(reader.Value);
+	    }
+
+	    private class RoundedDoubleConverter : Newtonsoft.Json.JsonConverter<double>
+	    {
+		    public override void WriteJson(Newtonsoft.Json.JsonWriter writer, double value, Newtonsoft.Json.JsonSerializer serializer)
+			    => writer.WriteValue(Math.Round(value, FLOAT_ROUND_DIGITS));
+
+		    public override double ReadJson(Newtonsoft.Json.JsonReader reader, Type objectType, double existingValue, bool hasExistingValue, Newtonsoft.Json.JsonSerializer serializer)
+			    => Convert.ToDouble(reader.Value);
+	    }
 #endif
 
 		private T GetValueFromString(string serializedValue)
