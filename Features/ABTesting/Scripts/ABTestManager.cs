@@ -93,8 +93,26 @@ namespace Dessentials.Features.ABTesting
 	    }
 #endif
 		
+		/// <summary>
+		/// Marks a field as an AB test that the manager initializes and fetches.
+		/// <para>
+		/// The optional group is a free-form label used to bucket the test in debug tooling
+		/// (see <c>SROptions.RemoteConfig</c>). It is referenced from code, so unlike inspector
+		/// attributes it survives IL2CPP metadata stripping on device builds.
+		/// </para>
+		/// </summary>
 		[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-		private sealed class RegisteredABTestAttribute : Attribute { }
+		public sealed class RegisteredABTestAttribute : Attribute
+		{
+			public const string DEFAULT_GROUP = "General";
+
+			public string Group { get; }
+
+			public RegisteredABTestAttribute(string pGroup = DEFAULT_GROUP)
+			{
+				Group = string.IsNullOrWhiteSpace(pGroup) ? DEFAULT_GROUP : pGroup;
+			}
+		}
     }
 
 }
