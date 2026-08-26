@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
@@ -81,6 +81,15 @@ namespace Dessentials.Common.Utility
         private bool m_hasHorizontal;
         private bool m_hasVertical;
         private int m_boundCount;
+
+#if UNITY_EDITOR
+        // The maximum bound as the last fit resolved it. Kept so the gizmo can show the rect the fit
+        // actually ran against instead of re-reading the marker transforms, which are anchored to a
+        // screen space rect and so sit wherever the anchors last snapped them.
+        private Vector2 m_lastMaxBoundMin;
+        private Vector2 m_lastMaxBoundMax;
+        private bool m_hasLastMaxBound;
+#endif
 
         /// <summary>
         /// How many rects have contributed to the current bound since the last <see cref="ClearBounds"/>.
@@ -327,6 +336,12 @@ namespace Dessentials.Common.Utility
                 return false;
             }
 
+#if UNITY_EDITOR
+            m_lastMaxBoundMin = pMin;
+            m_lastMaxBoundMax = pMax;
+            m_hasLastMaxBound = true;
+#endif
+
             return true;
         }
 
@@ -367,18 +382,28 @@ namespace Dessentials.Common.Utility
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Cyan is the maximum bound the content has to fit into, magenta is what has been registered so far.
-        /// After a successful fit the magenta rect sits centered inside the cyan one and touches it on the
+        /// Red is the maximum bound the content has to fit into, magenta is what has been registered so far.
+        /// After a successful fit the magenta rect sits centered inside the red one and touches it on the
         /// axis that drove the scale. The magenta rect only exists once something has registered, so it shows
         /// up in play mode, and it flattens to a line on an axis nothing registered on.
+        /// <para>
+        /// The red rect is the bound the last fit resolved, not a live read of the marker transforms, so it
+        /// keeps showing what the fit was actually measured against. Until the first fit runs there is no
+        /// resolved bound, so the markers' current positions stand in for it.
+        /// </para>
         /// </summary>
         private void OnDrawGizmos()
         {
             var previousColor = Gizmos.color;
 
-            if (leftBound != null && rightBound != null && topBound != null && bottomBound != null)
+            if (m_hasLastMaxBound)
             {
-                Gizmos.color = Color.cyan;
+                Gizmos.color = Color.red;
+                DrawRectGizmo(m_lastMaxBoundMin, m_lastMaxBoundMax);
+            }
+            else if (leftBound != null && rightBound != null && topBound != null && bottomBound != null)
+            {
+                Gizmos.color = Color.red;
                 DrawRectGizmo(
                     new Vector2(leftBound.position.x, bottomBound.position.y),
                     new Vector2(rightBound.position.x, topBound.position.y));
