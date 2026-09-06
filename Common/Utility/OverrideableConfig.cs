@@ -176,6 +176,37 @@ namespace Dessentials.Common.Utility
 			Debug.Log($"[OverrideableConfig] Removed override for key '{_overrideKey}'.");
 		}
 
+		/// <summary>
+		/// Returns the override registered for <paramref name="key"/>, creating and registering an empty
+		/// one when the key has no entry yet. For editor tooling that authors an override in place;
+		/// requires <typeparamref name="TConfig"/> to have a public parameterless constructor.
+		/// </summary>
+		public TConfig GetOrCreateOverride(TKey key)
+		{
+			if (key == null)
+			{
+				Debug.LogError("[OverrideableConfig] Cannot create an override for a null key.");
+				return null;
+			}
+
+			if (TryGet(key, out var existing))
+				return existing;
+
+			try
+			{
+				overrides ??= new SerializableDictionary<TKey, TConfig>();
+				var created = Activator.CreateInstance<TConfig>();
+				overrides[key] = created;
+				return created;
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError($"[OverrideableConfig] Could not create a {typeof(TConfig).Name} for key '{key}': it needs a public parameterless constructor.");
+				Debug.LogException(ex);
+				return null;
+			}
+		}
+
 		/// <summary>Adds or replaces the override stored under <paramref name="key"/> with the config parsed from <paramref name="json"/>.</summary>
 		public void ImportOverride(TKey key, string json)
 		{
