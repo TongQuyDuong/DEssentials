@@ -24,6 +24,12 @@ namespace Dessentials.Features.ABTesting
 	    [SerializeField]
 	    private string firebaseKey;
 
+#if ODIN_INSPECTOR
+	    // Named after the class so the section stays identifiable when an ABTest is drawn
+	    // nested inside another config that has editor tools of its own.
+	    private const string TOOLS_GROUP = "AB Test Editor Tools";
+#endif
+
 	    [SerializeField]
 	    private bool enable;
 	    
@@ -35,6 +41,7 @@ namespace Dessentials.Features.ABTesting
 	    
 #if ODIN_INSPECTOR
 	    [ShowIf("@!UnityEngine.Application.isPlaying || !enable")]
+	    [PropertySpace(SpaceAfter = 12)]
 #endif
 	    [SerializeField]
 	    private T DefaultValue;
@@ -121,6 +128,7 @@ namespace Dessentials.Features.ABTesting
 	    }
 
 #if ODIN_INSPECTOR
+	    [TitleGroup(TOOLS_GROUP)]
 	    [Button("Import Default From String")]
 #endif
 	    public void ImportDefaultFromString(string value)
@@ -135,6 +143,7 @@ namespace Dessentials.Features.ABTesting
 
 #if UNITY_EDITOR
 #if ODIN_INSPECTOR
+	    [TitleGroup(TOOLS_GROUP)]
 	    [Button]
 #endif
 	    public void CopyJsonToClipboard(bool useNewtonsoft)
