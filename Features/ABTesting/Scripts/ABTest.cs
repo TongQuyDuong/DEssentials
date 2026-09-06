@@ -141,6 +141,12 @@ namespace Dessentials.Features.ABTesting
 		    DefaultValue = value;
 	    }
 
+	    /// <summary>
+	    /// The authored default, regardless of what has been fetched. Lets a caller reach into a
+	    /// composite default (e.g. an OverrideableConfig) instead of replacing the whole value.
+	    /// </summary>
+	    public T GetDefaultValue() => DefaultValue;
+
 #if UNITY_EDITOR
 #if ODIN_INSPECTOR
 	    [TitleGroup(TOOLS_GROUP)]

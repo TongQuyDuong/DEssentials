@@ -38,6 +38,12 @@ namespace Dessentials.Common.Utility
 		/// <summary>The value used whenever a key has no override.</summary>
 		public TConfig Default => defaultConfig;
 
+		/// <summary>
+		/// Replaces the default value, leaving every override in place. For config loaders that push a
+		/// locally loaded fallback in at runtime.
+		/// </summary>
+		public void SetDefault(TConfig config) => defaultConfig = config;
+
 		public IReadOnlyDictionary<TKey, TConfig> Overrides => overrides;
 
 		/// <summary>Returns the override registered for <paramref name="key"/>, or the default config when there is none.</summary>
