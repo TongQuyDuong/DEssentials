@@ -97,9 +97,18 @@ namespace Dessentials.Serializables
     public class StringSerializedEnum<TEnum>
         where TEnum : struct, Enum
     {
+        // Resolved once per closed generic type instead of on every failed parse.
+        private static readonly TEnum FALLBACK_VALUE = Enum.GetValues(typeof(TEnum)).Cast<TEnum>().Min();
+
         [HideInInspector]
         public string serializedValue = "None";
-        
+
+        // Enum.TryParse reflects on every call, so the last parse is kept and only redone when the
+        // string itself changes - deserialization and the inspector both write serializedValue directly.
+        private string _cachedFrom;
+        private TEnum _cachedValue;
+        private bool _hasCachedValue;
+
         public StringSerializedEnum(TEnum type)
         {
             Value = type;
@@ -109,19 +118,34 @@ namespace Dessentials.Serializables
         {
             get
             {
-                if (Enum.TryParse<TEnum>(serializedValue, out var result))
-                    return result;
+                if (_hasCachedValue && _cachedFrom == serializedValue)
+                    return _cachedValue;
 
-                Debug.LogError($"Failed to get Enum {nameof(TEnum)} : {serializedValue}");
+                if (!Enum.TryParse<TEnum>(serializedValue, out var result))
+                {
+                    Debug.LogError($"Failed to get Enum {nameof(TEnum)} : {serializedValue}");
 
-                var val = Enum.GetValues(typeof(TEnum)).Cast<TEnum>().Min();
+                    result = FALLBACK_VALUE;
+                    serializedValue = result.ToString();
+                }
 
-                serializedValue = val.ToString();
+                Cache(result);
 
-                return val;
+                return result;
             }
 
-            set => serializedValue = value.ToString();
+            set
+            {
+                serializedValue = value.ToString();
+                Cache(value);
+            }
+        }
+
+        private void Cache(TEnum value)
+        {
+            _cachedFrom = serializedValue;
+            _cachedValue = value;
+            _hasCachedValue = true;
         }
     }
 }
