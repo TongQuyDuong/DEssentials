@@ -99,6 +99,11 @@ namespace Dessentials.Serializables
     {
         [HideInInspector]
         public string serializedValue = "None";
+        
+        public StringSerializedEnum(TEnum type)
+        {
+            Value = type;
+        }
 
         public TEnum Value
         {
@@ -133,9 +138,16 @@ namespace Dessentials.Serializables
         {
             var serializedValueProp = property.FindPropertyRelative("serializedValue");
 
-            var enumType = fieldInfo.FieldType;
-            if (enumType.IsGenericType)
+            var enumType = ResolveDrawnType(property);
+            if (enumType != null && enumType.IsGenericType)
                 enumType = enumType.GetGenericArguments()[0];
+
+            if (enumType == null || !enumType.IsEnum)
+            {
+                // Nothing to build a popup from - show the raw string rather than throwing every repaint.
+                EditorGUI.PropertyField(position, serializedValueProp, label);
+                return;
+            }
 
             Enum currentValue;
             if (!string.IsNullOrEmpty(serializedValueProp.stringValue)
@@ -154,6 +166,65 @@ namespace Dessentials.Serializables
             {
                 serializedValueProp.stringValue = newValue.ToString();
             }
+        }
+
+        /// <summary>
+        /// The type actually being drawn, resolved by walking the property path with reflection.
+        /// Neither shortcut works here: fieldInfo is null for an element inside a list/dictionary
+        /// (and describes the collection, not the element, when it isn't), and boxedValue refuses
+        /// generic managed types. Returns null when a segment can't be resolved.
+        /// </summary>
+        private static Type ResolveDrawnType(SerializedProperty property)
+        {
+            var type = property.serializedObject.targetObject.GetType();
+            var path = property.propertyPath.Split('.');
+
+            for (int i = 0; i < path.Length; i++)
+            {
+                // A collection element arrives as "<field>.Array.data[n]".
+                if (path[i] == "Array" && i + 1 < path.Length && path[i + 1].StartsWith("data["))
+                {
+                    if (type.IsArray)
+                        type = type.GetElementType();
+                    else if (type.IsGenericType)
+                        type = type.GetGenericArguments()[0];
+                    else
+                        return null;
+
+                    if (type == null)
+                        return null;
+
+                    i++;
+                    continue;
+                }
+
+                var field = GetFieldIncludingBaseTypes(type, path[i]);
+                if (field == null)
+                    return null;
+
+                type = field.FieldType;
+            }
+
+            return type;
+        }
+
+        // GetField only sees private fields declared on the type itself, so walk up for the
+        // [SerializeField] private members further up a hierarchy.
+        private static System.Reflection.FieldInfo GetFieldIncludingBaseTypes(Type type, string name)
+        {
+            const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.NonPublic;
+
+            for (var current = type; current != null; current = current.BaseType)
+            {
+                var field = current.GetField(name, flags);
+
+                if (field != null)
+                    return field;
+            }
+
+            return null;
         }
     }
 }
