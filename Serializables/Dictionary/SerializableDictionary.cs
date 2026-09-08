@@ -25,11 +25,6 @@ namespace Dessentials.Serializables
 			}
 
 			keyValues.RemoveAll(value => ContainsKey(value.k) == false);
-
-			for (int i = 0; i < keyValues.Count; i++)
-			{
-				keyValues[i].index = i;
-			}
 		}
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
@@ -40,7 +35,7 @@ namespace Dessentials.Serializables
 
 			foreach (var serializedKVP in keyValues)
 			{
-				if (!(serializedKVP.keyDuplicated = ContainsKey(serializedKVP.k)))
+				if (!ContainsKey(serializedKVP.k))
 				{
 					Add(serializedKVP.k, serializedKVP.v);
 				}
@@ -96,9 +91,6 @@ namespace Dessentials.Serializables
 		[System.Serializable]
 		public class SerializedDictionary<TypeKey, TypeValue> : SerializableKeyValue<TypeKey, TypeValue>
 		{
-			public int index;
-			public bool keyDuplicated;
-
 			public SerializedDictionary(TypeKey key, TypeValue value) : base(key, value) { }
 
 			public static implicit operator SerializedDictionary<TypeKey, TypeValue>(KeyValuePair<TypeKey, TypeValue> kvp)
