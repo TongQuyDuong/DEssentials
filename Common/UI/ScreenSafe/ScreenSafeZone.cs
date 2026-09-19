@@ -66,6 +66,17 @@ namespace Dessentials.Common.UI
 
 		private void CheckSafeArea()
 		{
+			// Runs from OnEnable, so an unwired canvas would throw before anything else
+			// gets a chance to report it. An unassigned canvas is always a setup mistake,
+			// never a valid state, so say so loudly rather than failing silently.
+			if (canvas == null)
+			{
+				UnityEngine.Debug.LogError(
+					$"{nameof(ScreenSafeZone)} on '{name}' has no canvas assigned — "
+					+ "safe-area layout skipped. Assign the canvas field in the Inspector.", this);
+				return;
+			}
+
 			var safeArea = Screen.safeArea;
 			safeArea.height -= topBannerOffset;
 			if (fullTop)
