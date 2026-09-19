@@ -27,6 +27,19 @@ namespace Dessentials.Helpers
 		public static int HourCheat;
 		public static int MinuteCheat;
 
+		/// Wipes static state between play sessions, for projects that disable Reload
+		/// Domain in Enter Play Mode Options, so a run always starts with time unshifted
+		/// instead of inheriting the previous session's cheat offsets.
+		/// m_HasInternet is deliberately not reset: nothing reads it (see CS0414).
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			Cheat = false;
+			DayCheat = 0;
+			HourCheat = 0;
+			MinuteCheat = 0;
+		}
+
 		/// <summary>
 		/// d h m s
 		/// </summary>

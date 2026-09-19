@@ -25,6 +25,14 @@ namespace Dessentials.Common.UI
 			screenSafeAreas.Add(this);
 		}
 
+		private void OnDestroy()
+		{
+			// Pairs with the Add in Start. Without it the static list keeps a reference to
+			// every zone ever spawned, so it grows across scene loads and the offset loops
+			// walk a list that is mostly dead entries. Remove is a no-op if Start never ran.
+			screenSafeAreas.Remove(this);
+		}
+
 		private void OnEnable()
 		{
 			CheckSafeArea();
@@ -114,6 +122,20 @@ namespace Dessentials.Common.UI
 		public static float topBannerOffset;
 		public static float bottomBannerOffset;
 		public static List<ScreenSafeZone> screenSafeAreas = new();
+
+		/// Wipes static state between play sessions. Without this, disabling Reload Domain
+		/// in Enter Play Mode Options leaves OnOffsetChanged invoking subscribers from the
+		/// previous session, and carries the previous run's banner offsets into the next.
+		/// screenSafeAreas is cleared as a backstop; OnDestroy already unregisters each
+		/// zone, and the offset loops null-check, so stale entries leak rather than throw.
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			OnOffsetChanged = null;
+			topBannerOffset = 0f;
+			bottomBannerOffset = 0f;
+			screenSafeAreas.Clear();
+		}
 
 		public static void SetTopOffsetForBannerAd(float pBannerHeight, bool pPlaceInSafeArea = true)
 		{

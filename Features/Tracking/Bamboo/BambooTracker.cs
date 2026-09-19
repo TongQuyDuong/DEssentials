@@ -24,6 +24,12 @@ namespace Dessentials.Features.Tracking
     public partial class BambooTracker : MonoBehaviour, IBambooTracker
     {
         public static Action ReInitializeBambooEvents;
+
+        /// Wipes static state between play sessions, for projects that disable Reload
+        /// Domain in Enter Play Mode Options. Otherwise this delegate keeps subscribers
+        /// from the previous session and re-init fires into destroyed trackers.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => ReInitializeBambooEvents = null;
         
         public int ActiveBambooTracksCount 
             => m_bambooEvents.Count(e => e.IsActive);

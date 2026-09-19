@@ -6,6 +6,17 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Dessentials.Common.EntityManagement
 {
+    /// Counter bumped once per play session. Exists because Unity never invokes
+    /// [RuntimeInitializeOnLoadMethod] on a generic type, so ManagedEntityFactory{T}
+    /// cannot reset its own statics the way non-generic types do.
+    internal static class ManagedEntityFactoryGeneration
+    {
+        internal static int Current { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Next() => Current++;
+    }
+
     public static class ManagedEntityFactory<TObject> where TObject : ManagedEntity<TObject>
     {
         // ReSharper disable once StaticMemberInGenericType
@@ -13,8 +24,26 @@ namespace Dessentials.Common.EntityManagement
         // ReSharper disable once StaticMemberInGenericType
         private static AsyncOperationHandle<GameObject> s_prefabHandle;
         private static readonly Stack<TObject> s_pool = new();
+        // ReSharper disable once StaticMemberInGenericType
+        private static int s_generation = -1;
 
         private static string AddressableID => typeof(TObject).Name;
+
+        /// Drops state left over from a previous play session. Only does anything when
+        /// Enter Play Mode Options has Reload Domain switched off. s_prefabHandle is the
+        /// reason this is needed: it is a struct, so unlike the prefab GameObject and the
+        /// pooled components it never becomes Unity's fake-null and would otherwise be
+        /// released against a refcount from the previous session.
+        private static void EnsureCurrentGeneration()
+        {
+            if (s_generation == ManagedEntityFactoryGeneration.Current)
+                return;
+
+            s_generation = ManagedEntityFactoryGeneration.Current;
+            s_prefab = null;
+            s_prefabHandle = default;
+            s_pool.Clear();
+        }
 
         private static async UniTask<GameObject> LoadPrefabAsync()
         {
@@ -28,6 +57,8 @@ namespace Dessentials.Common.EntityManagement
 
         public static async UniTask<TObject> GetAsync(Transform parent = null)
         {
+            EnsureCurrentGeneration();
+
             TObject instance;
 
             if (s_pool.Count > 0)
@@ -73,6 +104,8 @@ namespace Dessentials.Common.EntityManagement
 
         public static async UniTask PreloadAsync(int count, Transform parent = null)
         {
+            EnsureCurrentGeneration();
+
             var prefab = await LoadPrefabAsync();
 
             for (int i = 0; i < count; i++)
@@ -107,6 +140,8 @@ namespace Dessentials.Common.EntityManagement
 
         public static void Dispose()
         {
+            EnsureCurrentGeneration();
+
             while (s_pool.Count > 0)
             {
                 var obj = s_pool.Pop();
