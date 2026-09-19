@@ -1,6 +1,10 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+#if DESSENTIALS_DOTWEEN
 using DG.Tweening;
+#elif DESSENTIALS_PRIME_TWEEN
+using PrimeTween;
+#endif
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
@@ -19,13 +23,14 @@ namespace Dessentials.Utility
         {
             yield return null;
             yield return null;
-            
+
             RepositionNow();
         }
 
+#if DESSENTIALS_DOTWEEN
         public Sequence SetSpaceAndRepositionSmooth(float newSpace)
         {
-            space = newSpace; 
+            space = newSpace;
 
             return RepositionSmooth();
         }
@@ -42,7 +47,7 @@ namespace Dessentials.Utility
             var taskList = new List<UniTask>();
 
             var activeChilds = GetActiveChilds();
-            var activeChildCount = activeChilds.Count; 
+            var activeChildCount = activeChilds.Count;
 
             for (int i = 0; i < activeChildCount; i++)
             {
@@ -88,6 +93,88 @@ namespace Dessentials.Utility
             return seq;
         }
 
+#elif DESSENTIALS_PRIME_TWEEN
+        public Sequence SetSpaceAndRepositionSmooth(float newSpace)
+        {
+            space = newSpace;
+
+            return RepositionSmooth();
+        }
+
+        public async UniTask SetSpaceAndPlayStartLevelAnimation(float newSpace)
+        {
+            space = newSpace;
+
+            RepositionNow();
+
+            await UniTask.DelayFrame(2);
+
+            var taskList = new List<UniTask>();
+
+            var activeChilds = GetActiveChilds();
+            var activeChildCount = activeChilds.Count;
+
+            for (int i = 0; i < activeChildCount; i++)
+            {
+                var child = activeChilds[i];
+                var leftPos = transform.position.x - (activeChildCount - 1) * space / 2;
+                var targetLocalPos = new Vector3(leftPos + i * space, 0, transform.position.z);
+
+                child.gameObject.SetActive(false);
+
+                // PrimeTween has no OnStart, so the delay and the re-activation are
+                // sequence steps ahead of the move instead of tween settings on it.
+                Tween.StopAll(child);
+                taskList.Add(Sequence.Create()
+                    .ChainDelay(0.5f + i * 0.05f)
+                    .ChainCallback(() => child.gameObject.SetActive(true))
+                    .Chain(Tween.LocalPositionX(child, targetLocalPos.x + 15, targetLocalPos.x, 0.3f,
+                        Ease.OutCubic))
+                    .ToUniTask()
+                );
+            }
+            await UniTask.WhenAll(taskList);
+        }
+
+#if ODIN_INSPECTOR
+        [Button]
+#endif
+        public Sequence RepositionSmooth()
+        {
+            var activeChilds = GetActiveChilds();
+            var activeChildCount = activeChilds.Count;
+            var leftPos = transform.position.x - (activeChildCount - 1) * space / 2;
+
+            var seq = Sequence.Create();
+
+            for (int i = 0; i < activeChildCount; i++)
+            {
+                var child = activeChilds[i];
+                Tween.StopAll(child);
+                seq.Group(Tween.LocalPositionX(child, leftPos + i * space, 0.2f));
+            }
+
+            return seq;
+        }
+
+#else
+        // No tween backend declared: every "smooth" entry point snaps to the final
+        // layout, so callers keep working without DOTween or PrimeTween present.
+        public void SetSpaceAndRepositionSmooth(float newSpace) => SetSpaceAndRepositionNow(newSpace);
+
+        public UniTask SetSpaceAndPlayStartLevelAnimation(float newSpace)
+        {
+            SetSpaceAndRepositionNow(newSpace);
+
+            return UniTask.CompletedTask;
+        }
+
+#if ODIN_INSPECTOR
+        [Button]
+#endif
+        public void RepositionSmooth() => RepositionNow();
+#endif
+
 #if ODIN_INSPECTOR
         [Button]
 #endif
@@ -102,10 +189,10 @@ namespace Dessentials.Utility
                 child.localPosition = new Vector3(leftPos + i * space, 0, transform.position.z);
             }
         }
-        
+
         public void SetSpaceAndRepositionNow(float newSpace)
         {
-            space = newSpace; 
+            space = newSpace;
 
             RepositionNow();
         }
@@ -124,14 +211,14 @@ namespace Dessentials.Utility
 
             return activeChilds;
         }
-        
+
         public Vector2 GetNextPosition()
         {
             var activeChilds = GetActiveChilds();
             var rightPosition = transform.position.x + (activeChilds.Count - 1) * space / 2;
             return new Vector2(rightPosition + space, 0);
         }
-        
+
         public Vector2 GetNextWorldPosition()
         {
             return transform.TransformPoint(GetNextPosition());
