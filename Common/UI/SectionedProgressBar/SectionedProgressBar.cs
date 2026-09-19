@@ -1,4 +1,4 @@
-#if DOTWEEN
+#if DESSENTIALS_DOTWEEN
 using DG.Tweening;
 #endif
 using System.Collections;
@@ -71,7 +71,7 @@ namespace Dessentials.Common.UI
             }
         }
 
-#if DOTWEEN
+#if DESSENTIALS_DOTWEEN
         public virtual Tween TweenCurrentFill(int barCount, float duration = 0.1f)
         {
             return _barSlider.DOValue(barCount, duration);

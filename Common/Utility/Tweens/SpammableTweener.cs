@@ -1,4 +1,4 @@
-#if DOTWEEN
+#if DESSENTIALS_DOTWEEN
 using System;
 using System.Collections;
 using System.Collections.Generic;

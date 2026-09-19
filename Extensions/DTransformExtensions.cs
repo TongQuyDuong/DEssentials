@@ -1,4 +1,4 @@
-#if DOTWEEN
+#if DESSENTIALS_DOTWEEN
 using DG.Tweening;
 #endif
 using UnityEngine;
@@ -7,7 +7,7 @@ namespace Dessentials.Extensions
 {
     public static class DTransformExtensions
     {
-#if DOTWEEN
+#if DESSENTIALS_DOTWEEN
         public static Sequence DOBouncyScale(this Transform transform, float duration, float strength = 0.1f)
         {
             var originalScale = transform.localScale;

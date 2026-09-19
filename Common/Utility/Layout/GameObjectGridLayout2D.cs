@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-#if DOTWEEN
+#if DESSENTIALS_DOTWEEN
 using DG.Tweening;
 #endif
 #if ODIN_INSPECTOR
@@ -78,7 +78,7 @@ namespace Dessentials.Utility
             }
         }
 
-#if DOTWEEN
+#if DESSENTIALS_DOTWEEN
 #if ODIN_INSPECTOR
         [Button]
 #endif
