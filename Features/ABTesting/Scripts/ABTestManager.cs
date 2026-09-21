@@ -29,6 +29,11 @@ namespace Dessentials.Features.ABTesting
 		{
 			ExternalOnAwake();
 
+			// This is a ScriptableObject, so its state outlives a play session. Initialize called a
+			// second time - Reload Domain switched off, or simply another caller - would otherwise
+			// append a second copy of every test and run each one twice on fetch.
+			m_ABTests.Clear();
+
 			var abTestFields
 				= GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
 					.Where(field => field.IsDefined(typeof(RegisteredABTestAttribute), false));
@@ -43,7 +48,11 @@ namespace Dessentials.Features.ABTesting
 			var remoteConfig = IRemoteConfigValueProvider.Current;
 
 			if (remoteConfig != null)
+			{
+				// Detach first, same reason: subscribing twice runs the handler twice per fetch.
+				remoteConfig.OnFetched -= OnRemoteConfigFetched;
 				remoteConfig.OnFetched += OnRemoteConfigFetched;
+			}
 
 			foreach (var test in m_ABTests)
 			{
