@@ -59,6 +59,12 @@ namespace Dessentials.Common.EntityManagement
 
         private static string AddressableID => typeof(TObject).Name;
 
+        /// Component trên prefab đã load, null cho tới khi có ai Get/Preload xong. Để đọc số liệu
+        /// của prefab (kích thước, giá trị mặc định) mà không phải giữ thêm một reference trực tiếp
+        /// tới asset: reference trực tiếp từ scene sẽ nhét prefab vào build hai lần, một lần theo
+        /// scene và một lần theo bundle Addressables.
+        public static TObject Prefab => s_prefab != null ? s_prefab.GetComponent<TObject>() : null;
+
         /// Drops state left over from a previous play session. Only does anything when
         /// Enter Play Mode Options has Reload Domain switched off. s_prefabHandle is the
         /// reason this is needed: it is a struct, so unlike the prefab GameObject and the

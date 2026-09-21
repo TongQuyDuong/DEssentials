@@ -79,8 +79,13 @@ does the reflection to find event types.
 `ManagedEntityFactory<T>` loads its prefab through **Addressables**, keyed by `typeof(T).Name` —
 rename the class and the address goes with it. `GetAsync` pools, `Dispose()` on the entity
 returns it, and `Preload(count)` tops the pool up to `count` rather than adding `count` more.
-Instantiation goes through `ManagedEntityInjection`, which is a plain `Object.Instantiate`
-unless `DESSENTIALS_VCONTAINER` is set and something has assigned `Resolver`.
+`Prefab` exposes the loaded prefab's component so a consumer can read its numbers without
+holding a second, direct reference to the asset. Instantiation goes through
+`ManagedEntityInjection`, which is a plain `Object.Instantiate` unless
+`DESSENTIALS_VCONTAINER` is set and something has assigned `Resolver`.
+
+`Return` hides the entity the moment it is called, so an exit animation has to finish
+before `Dispose()`, not after it.
 
 **Global services** — interfaces only (`IFirebaseAnalytics`, `IGameInitializer`,
 `ISessionDataProvider`, `ITransitionalDataProvider`) so the host game supplies the impls.
