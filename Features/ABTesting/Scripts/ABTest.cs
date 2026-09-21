@@ -87,7 +87,13 @@ namespace Dessentials.Features.ABTesting
 	    {
 		    if (enable)
 		    {
-			    var exists = IRemoteConfigValueProvider.Global.TryGetStringValue(firebaseKey, out var stringValue);
+			    // No provider registered reads exactly like a key the provider does not carry: keep
+			    // the value cached from a previous run, and the authored default when there is none.
+			    var provider = IRemoteConfigValueProvider.Current;
+
+			    string stringValue = null;
+			    var exists = provider != null && provider.TryGetStringValue(firebaseKey, out stringValue);
+
 			    if (exists)
 			    {
 				    PlayerPrefs.SetString(firebaseKey, stringValue);
@@ -107,8 +113,12 @@ namespace Dessentials.Features.ABTesting
 					    FetchedValue =  DefaultValue;
 				    }
 			    }
-			    
-			    fetched = true;
+
+			    // Only a provider that actually answered counts as fetched, so GetGuaranteedValue
+			    // falls back to the authored default while there is nothing serving remote config.
+			    // Not cleared on the way down: a fetch that already landed stays landed.
+			    if (provider != null)
+				    fetched = true;
 		    }
 	    }
 

@@ -38,8 +38,13 @@ namespace Dessentials.Features.ABTesting
 				m_ABTests.Add((IABTest)field.GetValue(this));
 			}
 						
-			IRemoteConfigValueProvider.Global.OnFetched += OnRemoteConfigFetched;
-			
+			// With no provider registered nothing will ever fetch, so there is nothing to subscribe
+			// to: every test stays on the value Init() just restored from prefs, or its default.
+			var remoteConfig = IRemoteConfigValueProvider.Current;
+
+			if (remoteConfig != null)
+				remoteConfig.OnFetched += OnRemoteConfigFetched;
+
 			foreach (var test in m_ABTests)
 			{
 				test.Init();
