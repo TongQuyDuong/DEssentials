@@ -24,6 +24,33 @@ namespace Dessentials.Common.EntityManagement
     {
         public ManagedEntityState ManagedEntityState { get; set; }
 
+        // TRS gốc của prefab. Factory chụp lại ngay sau Instantiate(prefab, parent,
+        // worldPositionStays: false), lúc local values còn đúng bằng của prefab — không đọc ở Awake
+        // vì Awake không chạy trong Edit Mode, cũng không hỏi lại prefab asset vì factory
+        // không phải giữ nó sống chỉ để biết mấy con số này.
+        private Vector3 spawnLocalPosition;
+        private Quaternion spawnLocalRotation = Quaternion.identity;
+        private Vector3 spawnLocalScale = Vector3.one;
+
+        /// Của factory gọi, không gọi tay: chụp TRS ngay sau khi Instantiate.
+        public void CaptureSpawnTransform()
+        {
+            var t = transform;
+            spawnLocalPosition = t.localPosition;
+            spawnLocalRotation = t.localRotation;
+            spawnLocalScale = t.localScale;
+        }
+
+        /// Trả transform về đúng như lúc mới Instantiate. Factory gọi mỗi lần lấy ra khỏi pool,
+        /// vì instance còn mang tư thế của lần dùng trước và của parent cũ.
+        public void RestoreSpawnTransform()
+        {
+            var t = transform;
+            t.localPosition = spawnLocalPosition;
+            t.localRotation = spawnLocalRotation;
+            t.localScale = spawnLocalScale;
+        }
+
         /// Returns this entity to the factory pool. Override to add cleanup before pooling.
         public virtual void Dispose()
         {

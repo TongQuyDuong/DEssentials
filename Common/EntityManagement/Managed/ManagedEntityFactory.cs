@@ -3,6 +3,10 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+#if DESSENTIALS_VCONTAINER
+using VContainer;
+using VContainer.Unity;
+#endif
 
 namespace Dessentials.Common.EntityManagement
 {
@@ -15,6 +19,32 @@ namespace Dessentials.Common.EntityManagement
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Next() => Current++;
+    }
+
+    /// Cách entity mới Instantiate được dựng. Mặc định là Object.Instantiate trần.
+    ///
+    /// Bật DESSENTIALS_VCONTAINER thì thêm `Resolver`: gắn IObjectResolver vào đó
+    /// (LifetimeScope gắn lúc Awake, gỡ lúc OnDestroy) là entity spawn ra được inject.
+    /// Bỏ trống thì vẫn rơi về Object.Instantiate, nên factory dùng được cả ngoài scope.
+    // ponytail: một resolver global, đủ cho một LifetimeScope sống tại một thời điểm.
+    // Có hai scope chồng nhau thì đổi sang truyền resolver vào GetAsync/PreloadAsync.
+    public static class ManagedEntityInjection
+    {
+#if DESSENTIALS_VCONTAINER
+        public static IObjectResolver Resolver { get; set; }
+#endif
+
+        internal static T Instantiate<T>(GameObject prefab, Transform parent) where T : Component
+        {
+#if DESSENTIALS_VCONTAINER
+            var instance = Resolver != null
+                ? Resolver.Instantiate(prefab, parent)
+                : Object.Instantiate(prefab, parent);
+#else
+            var instance = Object.Instantiate(prefab, parent);
+#endif
+            return instance.GetComponent<T>();
+        }
     }
 
     public static class ManagedEntityFactory<TObject> where TObject : ManagedEntity<TObject>
@@ -45,12 +75,19 @@ namespace Dessentials.Common.EntityManagement
             s_pool.Clear();
         }
 
+        /// Chỉ đặt LoadAssetAsync một lần: Preload chạy song song với Get (hoặc hai Get sát nhau)
+        /// mà đặt hai lần thì lần sau ghi đè s_prefabHandle và bỏ rơi refcount của lần đầu.
+        /// Người đến sau await lại chính handle đó — Addressables cho nhiều người cùng nghe Completed,
+        /// còn UniTask.Preserve() thì không: nó chỉ nhớ kết quả, awaiter thứ hai lúc còn pending
+        /// sẽ ăn "Already continuation registered".
         private static async UniTask<GameObject> LoadPrefabAsync()
         {
             if (s_prefab != null)
                 return s_prefab;
 
-            s_prefabHandle = Addressables.LoadAssetAsync<GameObject>(AddressableID);
+            if (!s_prefabHandle.IsValid())
+                s_prefabHandle = Addressables.LoadAssetAsync<GameObject>(AddressableID);
+
             s_prefab = await s_prefabHandle.ToUniTask();
             return s_prefab;
         }
@@ -64,13 +101,15 @@ namespace Dessentials.Common.EntityManagement
             if (s_pool.Count > 0)
             {
                 instance = s_pool.Pop();
-                instance.transform.SetParent(parent);
+                instance.transform.SetParent(parent, false);
+                instance.RestoreSpawnTransform();
                 instance.gameObject.SetActive(true);
             }
             else
             {
                 var prefab = await LoadPrefabAsync();
-                instance = Object.Instantiate(prefab, parent).GetComponent<TObject>();
+                instance = ManagedEntityInjection.Instantiate<TObject>(prefab, parent);
+                instance.CaptureSpawnTransform();
             }
 
             instance.ManagedEntityState = ManagedEntityState.InRegistry;
@@ -81,6 +120,10 @@ namespace Dessentials.Common.EntityManagement
 
         public static void Return(TObject obj)
         {
+            // Cũng phải kiểm generation như Get: Return đến trước Get đầu tiên của session mới
+            // thì obj sẽ bị dọn cùng pool cũ ngay ở lần Get sau đó.
+            EnsureCurrentGeneration();
+
             ManagedEntityRegistry<TObject>.Unregister(obj);
             Registry<IDisposableEntity>.Unregister(obj);
             obj.ManagedEntityState = ManagedEntityState.InPool;
@@ -108,9 +151,12 @@ namespace Dessentials.Common.EntityManagement
 
             var prefab = await LoadPrefabAsync();
 
-            for (int i = 0; i < count; i++)
+            // Bơm cho pool đủ count chứ không cộng thêm count: Preload gọi lại ở mỗi màn thì
+            // pool sẽ phình mãi. Đọc s_pool.Count sau await vì trong lúc chờ pool có thể đã đầy.
+            while (s_pool.Count < count)
             {
-                var instance = Object.Instantiate(prefab, parent).GetComponent<TObject>();
+                var instance = ManagedEntityInjection.Instantiate<TObject>(prefab, parent);
+                instance.CaptureSpawnTransform();
                 instance.ManagedEntityState = ManagedEntityState.InPool;
                 instance.gameObject.SetActive(false);
                 s_pool.Push(instance);
@@ -153,6 +199,7 @@ namespace Dessentials.Common.EntityManagement
                 Addressables.Release(s_prefabHandle);
 
             s_prefab = null;
+            s_prefabHandle = default;
         }
     }
 }

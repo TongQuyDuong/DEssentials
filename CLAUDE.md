@@ -38,6 +38,7 @@ seems missing, the flag is the first thing to check.
 | `DESSENTIALS_SRDEBUGGER` | `SROptions.Dessentials` debug-panel entries and `BambooTrackOptions` | SRDebugger |
 | `DESSENTIALS_SPINE_ANIMATION` | `SpineAnimationEntity` | Spine Unity runtime |
 | `DESSENTIALS_INIT_ARGS` | `IInitArgsService<T>` (wraps `Sisus.Init.Service`) | Init(args) by Sisus |
+| `DESSENTIALS_VCONTAINER` | `ManagedEntityInjection.Resolver`, so entities built by `ManagedEntityFactory<T>` get injected. Without it the factory still works — it just uses a plain `Object.Instantiate` | VContainer |
 | `FIREBASE_CRASHLYTICS` | Bodies of `DFirebaseCrashlytics.Log` / `.LogException` — the class still exists without it, the calls just no-op | Firebase Crashlytics |
 | `ODIN_INSPECTOR` | `[Button]`, `[FoldoutGroup]`, `[InlineProperty]` inspector polish throughout (51 sites) | Odin Inspector — **auto-defined by Odin**, don't set by hand |
 | `UNITASK_DOTWEEN_SUPPORT` | `.ToUniTask()` on DOTween tweens in `GameObjectHorizontalLayout` | UniTask + DOTween — **auto-defined by UniTask** |
@@ -74,6 +75,12 @@ does the reflection to find event types.
 **Entity management** — `ManagedEntity` (with a `ManagedEntityState` lifecycle),
 `ManagedEntityFactory`, `ManagedEntityRegistry`, plus an unmanaged `Registry`.
 `IDisposableEntity` is the common contract.
+
+`ManagedEntityFactory<T>` loads its prefab through **Addressables**, keyed by `typeof(T).Name` —
+rename the class and the address goes with it. `GetAsync` pools, `Dispose()` on the entity
+returns it, and `Preload(count)` tops the pool up to `count` rather than adding `count` more.
+Instantiation goes through `ManagedEntityInjection`, which is a plain `Object.Instantiate`
+unless `DESSENTIALS_VCONTAINER` is set and something has assigned `Resolver`.
 
 **Global services** — interfaces only (`IFirebaseAnalytics`, `IGameInitializer`,
 `ISessionDataProvider`, `ITransitionalDataProvider`) so the host game supplies the impls.
