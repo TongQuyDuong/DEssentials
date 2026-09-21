@@ -50,7 +50,7 @@ namespace Dessentials.Common.EntityManagement
         {
             for (int i = s_entities.Count - 1; i >= 0; i--)
             {
-                if (s_entities[i] == null)
+                if (!UnityObjectAlive.IsAlive(s_entities[i]))
                 {
                     s_entities.RemoveAt(i);
                     continue;
@@ -69,7 +69,7 @@ namespace Dessentials.Common.EntityManagement
 
             for (int i = s_entities.Count - 1; i >= 0; i--)
             {
-                if (s_entities[i] == null)
+                if (!UnityObjectAlive.IsAlive(s_entities[i]))
                 {
                     s_entities.RemoveAt(i);
                     continue;
@@ -88,7 +88,7 @@ namespace Dessentials.Common.EntityManagement
 
             for (int i = s_entities.Count - 1; i >= 0; i--)
             {
-                if (s_entities[i] == null)
+                if (!UnityObjectAlive.IsAlive(s_entities[i]))
                 {
                     s_entities.RemoveAt(i);
                     continue;
@@ -108,7 +108,7 @@ namespace Dessentials.Common.EntityManagement
         public static void PurgeDestroyed()
         {
             for (int i = s_entities.Count - 1; i >= 0; i--)
-                if (s_entities[i] == null)
+                if (!UnityObjectAlive.IsAlive(s_entities[i]))
                     s_entities.RemoveAt(i);
         }
 

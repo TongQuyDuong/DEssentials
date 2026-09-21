@@ -102,11 +102,19 @@ namespace Dessentials.Common.EntityManagement
         {
             EnsureCurrentGeneration();
 
-            TObject instance;
-
-            if (s_pool.Count > 0)
+            // Pool là static nên nó sống qua SceneManager.LoadScene, còn instance bên trong thì
+            // không: chúng bị destroy cùng scene cũ và nằm lại đây dưới dạng fake-null. OnDestroy
+            // của entity có gọi PurgeDestroyed nhưng không dọn nổi chính nó — Unity chỉ đánh dấu
+            // destroyed sau khi OnDestroy chạy xong — nên phải bỏ xác ngay tại chỗ lấy ra.
+            TObject instance = null;
+            while (instance == null && s_pool.Count > 0)
             {
-                instance = s_pool.Pop();
+                var candidate = s_pool.Pop();
+                if (UnityObjectAlive.IsAlive(candidate)) instance = candidate;
+            }
+
+            if (instance != null)
+            {
                 instance.transform.SetParent(parent, false);
                 instance.RestoreSpawnTransform();
                 instance.gameObject.SetActive(true);
@@ -157,6 +165,9 @@ namespace Dessentials.Common.EntityManagement
 
             var prefab = await LoadPrefabAsync();
 
+            // Xác từ scene trước vẫn được tính là hàng trong pool, dọn trước rồi mới đếm.
+            PurgeDestroyed();
+
             // Bơm cho pool đủ count chứ không cộng thêm count: Preload gọi lại ở mỗi màn thì
             // pool sẽ phình mãi. Đọc s_pool.Count sau await vì trong lúc chờ pool có thể đã đầy.
             while (s_pool.Count < count)
@@ -180,7 +191,7 @@ namespace Dessentials.Common.EntityManagement
             while (s_pool.Count > 0)
             {
                 var obj = s_pool.Pop();
-                if (obj != null)
+                if (UnityObjectAlive.IsAlive(obj))
                     temp[kept++] = obj;
             }
 
@@ -197,7 +208,7 @@ namespace Dessentials.Common.EntityManagement
             while (s_pool.Count > 0)
             {
                 var obj = s_pool.Pop();
-                if (obj != null)
+                if (UnityObjectAlive.IsAlive(obj))
                     Object.Destroy(obj.gameObject);
             }
 

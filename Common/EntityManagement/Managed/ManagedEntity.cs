@@ -2,6 +2,16 @@ using UnityEngine;
 
 namespace Dessentials.Common.EntityManagement
 {
+    internal static class UnityObjectAlive
+    {
+        /// <summary>
+        /// Kiểm tra "còn sống" cho code generic. Với type parameter thì <c>x == null</c> chỉ là so
+        /// sánh tham chiếu: C# không lấy operator == của UnityEngine.Object cho type parameter, nên
+        /// object đã bị destroy sẽ lọt qua như còn sống. Ép về Object trước rồi mới so mới đúng.
+        /// </summary>
+        internal static bool IsAlive(Object obj) => obj != null;
+    }
+
     /// Lifecycle state of a managed entity.
     /// The factory sets this automatically on Get (InRegistry) and Return (InPool).
     public enum ManagedEntityState
@@ -63,7 +73,10 @@ namespace Dessentials.Common.EntityManagement
             switch (ManagedEntityState)
             {
                 case ManagedEntityState.InRegistry:
+                    // Gỡ khỏi cả hai chỗ Get đã đăng ký, y như Return làm — bỏ sót Registry thì
+                    // nó tích xác qua từng lần load scene.
                     ManagedEntityRegistry<TSelf>.Unregister((TSelf)this);
+                    Registry<IDisposableEntity>.Unregister(this);
                     break;
                 case ManagedEntityState.InPool:
                     ManagedEntityFactory<TSelf>.PurgeDestroyed();
