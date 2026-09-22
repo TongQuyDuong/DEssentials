@@ -44,6 +44,22 @@ namespace Dessentials.Common.Utility
 		/// </summary>
 		public void SetDefault(TConfig config) => defaultConfig = config;
 
+		/// <summary>
+		/// Adds or replaces the override stored under <paramref name="key"/>. The code-side counterpart of
+		/// <see cref="ImportOverride"/>, for config loaders whose TConfig cannot round-trip through JsonUtility.
+		/// </summary>
+		public void SetOverride(TKey key, TConfig config)
+		{
+			if (key == null)
+			{
+				Debug.LogError("[OverrideableConfig] Cannot set an override for a null key.");
+				return;
+			}
+
+			overrides ??= new SerializableDictionary<TKey, TConfig>();
+			overrides[key] = config;
+		}
+
 		public IReadOnlyDictionary<TKey, TConfig> Overrides => overrides;
 
 		/// <summary>Returns the override registered for <paramref name="key"/>, or the default config when there is none.</summary>
