@@ -3,7 +3,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using Spine.Unity;
 using UnityEngine;
 using UnityEngine.Events;
@@ -22,7 +24,9 @@ namespace Dessentials.Features.Spine
         [SerializeField]
         private CallbackType _callbackType = CallbackType.EndOfAnimation;
 
+#if ODIN_INSPECTOR
         [ShowIf(nameof(_callbackType), CallbackType.CustomDelay)]
+#endif
         [SerializeField]
         private float _callbackDelay;
         

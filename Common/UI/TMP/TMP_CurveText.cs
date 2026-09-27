@@ -1,5 +1,6 @@
-
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -53,7 +54,9 @@ namespace Dessentials.Common.UI
 			}
 		}
 
+#if ODIN_INSPECTOR
 		[Button]
+#endif
 		public void UpdateText()
 		{
 			Vector3[] vertices;

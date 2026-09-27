@@ -5,8 +5,12 @@ using Dessentials.Common;
 using Dessentials.Common.GlobalServices;
 using Dessentials.Extensions;
 using Dessentials.Serializables;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace Dessentials.Features.LevelDatabase
@@ -46,24 +50,34 @@ namespace Dessentials.Features.LevelDatabase
         }
 
 #if UNITY_EDITOR
+#if ODIN_INSPECTOR
         [TitleGroup("Import")]
         [ShowInInspector]
+#endif
         private TLeveScriptableObject[] ImportLevels;
 
+#if ODIN_INSPECTOR
         [TitleGroup("Import by Name")]
+#endif
         [SerializeField]
         private FolderReference _levelsRootFolder;
 
+#if ODIN_INSPECTOR
         [TitleGroup("Import by Name")]
         [ShowInInspector]
+#endif
         private List<string> _levelNamesToImport = new();
 
+#if ODIN_INSPECTOR
         [TitleGroup("Import by Name")]
         [ShowInInspector]
+#endif
         private List<string> _backupLevelNamesToImport = new();
 
+#if ODIN_INSPECTOR
         [TitleGroup("Import by Name")]
         [Button]
+#endif
         public void ImportLevelsByName()
         {
             if (_levelsRootFolder == null || !_levelsRootFolder.IsValid)
@@ -116,8 +130,10 @@ namespace Dessentials.Features.LevelDatabase
             AssetDatabase.SaveAssets();
         }
 
+#if ODIN_INSPECTOR
         [TitleGroup("Import by Name")]
         [Button]
+#endif
         public void ImportBackupLevelsByName()
         {
             if (_levelsRootFolder == null || !_levelsRootFolder.IsValid)
@@ -178,8 +194,10 @@ namespace Dessentials.Features.LevelDatabase
             AssetDatabase.SaveAssets();
         }
 
+#if ODIN_INSPECTOR
         [TitleGroup("Import")]
         [Button]
+#endif
         public void RemoveNullEntries()
         {
             var nullKeys = _levelsDictionary
@@ -193,8 +211,10 @@ namespace Dessentials.Features.LevelDatabase
             AssetDatabase.SaveAssets();
         }
 
+#if ODIN_INSPECTOR
         [TitleGroup("Import")]
         [Button]
+#endif
         public void ImportLevelsFromList()
         {
             foreach (var level in ImportLevels)
@@ -209,12 +229,16 @@ namespace Dessentials.Features.LevelDatabase
             AssetDatabase.SaveAssets();
         }
 
+#if ODIN_INSPECTOR
         [TitleGroup("Export")]
         [ShowInInspector]
+#endif
         private List<string> _fallbackLevelIDs = new();
 
+#if ODIN_INSPECTOR
         [TitleGroup("Export")]
         [Button]
+#endif
         public void GenerateFallbackLevelIDs()
         {
             var entries = _fallbackLevelIDs
