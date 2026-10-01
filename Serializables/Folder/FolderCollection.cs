@@ -5,7 +5,9 @@ using System.Linq;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace Dessentials.Serializables
