@@ -1,9 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dessentials.Common;
-using Dessentials.Common.GlobalServices;
-using Dessentials.Extensions;
 using Dessentials.Serializables;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -12,41 +8,28 @@ using Sirenix.OdinInspector;
 using UnityEditor;
 #endif
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Dessentials.Features.LevelDatabase
 {
-    [CreateAssetMenu(fileName = "LevelDatabase", menuName = "Dessentials/LevelDatabase")]
-    public class LevelDatabase<TLeveScriptableObject> : ScriptableObject
-        where TLeveScriptableObject : ScriptableObject
+    /// <summary>
+    /// Level name -> Addressable reference, so a remote list of names can pick levels without the
+    /// database loading every level. Abstract because a generic ScriptableObject cannot be an asset:
+    /// a game subclasses it with its own level type. An unknown name is the caller's to handle.
+    /// </summary>
+    public abstract class LevelDatabase<TLevel> : ScriptableObject
+        where TLevel : ScriptableObject
     {
         [SerializeField]
-        private SerializableDictionary<string, TLeveScriptableObject> _levelsDictionary = new();
+        protected SerializableDictionary<string, AssetReferenceT<TLevel>> _levelsDictionary = new();
 
-        [SerializeField]
-        private TLeveScriptableObject[] _backupLevels;
+        public bool Contains(string levelName) =>
+            levelName != null && _levelsDictionary.ContainsKey(levelName);
 
-        public TLeveScriptableObject GetLevelByName(string levelName)
+        public bool TryGetLevel(string levelName, out AssetReferenceT<TLevel> level)
         {
-            if (_levelsDictionary.ContainsKey(levelName))
-            {
-                return _levelsDictionary[levelName];
-            }
-            else
-            {
-                DFirebaseCrashlytics.Log($"Requesting non-existent level name : {levelName}");
-
-                return GetFallbackLevel();
-            }
-        }
-
-        public List<TLeveScriptableObject> GetLevelList(List<string> levelNames)
-        {
-            return (from levelName in levelNames select GetLevelByName(levelName)).ToList();
-        }
-
-        public TLeveScriptableObject GetFallbackLevel()
-        {
-            return _backupLevels.GetRandomFromCollection();
+            level = null;
+            return levelName != null && _levelsDictionary.TryGetValue(levelName, out level) && level != null;
         }
 
 #if UNITY_EDITOR
@@ -54,7 +37,7 @@ namespace Dessentials.Features.LevelDatabase
         [TitleGroup("Import")]
         [ShowInInspector]
 #endif
-        private TLeveScriptableObject[] ImportLevels;
+        private TLevel[] ImportLevels;
 
 #if ODIN_INSPECTOR
         [TitleGroup("Import by Name")]
@@ -68,11 +51,22 @@ namespace Dessentials.Features.LevelDatabase
 #endif
         private List<string> _levelNamesToImport = new();
 
-#if ODIN_INSPECTOR
-        [TitleGroup("Import by Name")]
-        [ShowInInspector]
-#endif
-        private List<string> _backupLevelNamesToImport = new();
+        /// <summary>Clears the database and fills it with <paramref name="levels"/>, keyed by asset name.</summary>
+        protected void SetLevels(IEnumerable<TLevel> levels)
+        {
+            _levelsDictionary.Clear();
+            foreach (var level in levels)
+            {
+                if (level == null) continue;
+                if (!_levelsDictionary.TryAdd(level.name, ReferenceTo(level)))
+                    Debug.LogError($"Level {level.name} is listed twice.");
+            }
+
+            EditorUtility.SetDirty(this);
+        }
+
+        private static AssetReferenceT<TLevel> ReferenceTo(TLevel level) =>
+            new(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(level)));
 
 #if ODIN_INSPECTOR
         [TitleGroup("Import by Name")]
@@ -92,8 +86,8 @@ namespace Dessentials.Features.LevelDatabase
                 return;
             }
 
-            var allLevels = _levelsRootFolder.LoadAssets<TLeveScriptableObject>();
-            var levelsByName = new Dictionary<string, TLeveScriptableObject>(allLevels.Length);
+            var allLevels = _levelsRootFolder.LoadAssets<TLevel>();
+            var levelsByName = new Dictionary<string, TLevel>(allLevels.Length);
             foreach (var level in allLevels)
                 levelsByName[level.name] = level;
 
@@ -115,7 +109,7 @@ namespace Dessentials.Features.LevelDatabase
                     continue;
                 }
 
-                if (!_levelsDictionary.TryAdd(trimmed, level))
+                if (!_levelsDictionary.TryAdd(trimmed, ReferenceTo(level)))
                 {
                     Debug.LogWarning($"Level already exists in dictionary: {trimmed}");
                     skipped++;
@@ -131,77 +125,13 @@ namespace Dessentials.Features.LevelDatabase
         }
 
 #if ODIN_INSPECTOR
-        [TitleGroup("Import by Name")]
-        [Button]
-#endif
-        public void ImportBackupLevelsByName()
-        {
-            if (_levelsRootFolder == null || !_levelsRootFolder.IsValid)
-            {
-                Debug.LogError("Levels root folder is not set or invalid.");
-                return;
-            }
-
-            if (_backupLevelNamesToImport == null || _backupLevelNamesToImport.Count == 0)
-            {
-                Debug.LogError("Backup level names list is empty.");
-                return;
-            }
-
-            var allLevels = _levelsRootFolder.LoadAssets<TLeveScriptableObject>();
-            var levelsByName = new Dictionary<string, TLeveScriptableObject>(allLevels.Length);
-            foreach (var level in allLevels)
-                levelsByName[level.name] = level;
-
-            var existingNames = new HashSet<string>(
-                _backupLevels?.Select(l => l != null ? l.name : null).Where(n => n != null)
-                ?? Array.Empty<string>());
-
-            var result = new List<TLeveScriptableObject>(_backupLevels ?? Array.Empty<TLeveScriptableObject>());
-            int added = 0;
-            int skipped = 0;
-            int notFound = 0;
-
-            foreach (var levelName in _backupLevelNamesToImport)
-            {
-                if (string.IsNullOrWhiteSpace(levelName))
-                    continue;
-
-                string trimmed = levelName.Trim();
-
-                if (!levelsByName.TryGetValue(trimmed, out var level))
-                {
-                    Debug.LogWarning($"SOLevel not found in folder: {trimmed}");
-                    notFound++;
-                    continue;
-                }
-
-                if (!existingNames.Add(trimmed))
-                {
-                    Debug.LogWarning($"Backup level already exists: {trimmed}");
-                    skipped++;
-                    continue;
-                }
-
-                result.Add(level);
-                added++;
-            }
-
-            _backupLevels = result.ToArray();
-            Debug.Log(
-                $"Backup import complete — Added: {added}, Skipped (duplicate): {skipped}, Not found: {notFound}");
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-        }
-
-#if ODIN_INSPECTOR
         [TitleGroup("Import")]
         [Button]
 #endif
         public void RemoveNullEntries()
         {
             var nullKeys = _levelsDictionary
-                .Where(kvp => kvp.Value == null)
+                .Where(kvp => kvp.Value == null || !kvp.Value.RuntimeKeyIsValid())
                 .Select(kvp => kvp.Key)
                 .ToList();
             foreach (var key in nullKeys)
@@ -219,7 +149,7 @@ namespace Dessentials.Features.LevelDatabase
         {
             foreach (var level in ImportLevels)
             {
-                if (!_levelsDictionary.TryAdd(level.name, level))
+                if (!_levelsDictionary.TryAdd(level.name, ReferenceTo(level)))
                 {
                     Debug.LogError($"Level {level.name} already exists!");
                 }
@@ -227,27 +157,6 @@ namespace Dessentials.Features.LevelDatabase
 
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssets();
-        }
-
-#if ODIN_INSPECTOR
-        [TitleGroup("Export")]
-        [ShowInInspector]
-#endif
-        private List<string> _fallbackLevelIDs = new();
-
-#if ODIN_INSPECTOR
-        [TitleGroup("Export")]
-        [Button]
-#endif
-        public void GenerateFallbackLevelIDs()
-        {
-            var entries = _fallbackLevelIDs
-                .Where(n => !string.IsNullOrWhiteSpace(n))
-                .Select(n => $"        \"{n.Trim()}\"");
-            var body = string.Join(",\n", entries);
-            var code = $"public static readonly List<string> FallbackLevelIDs = new List<string>\n{{\n{body}\n}};";
-            GUIUtility.systemCopyBuffer = code;
-            Debug.Log($"Copied to clipboard:\n{code}");
         }
 #endif
     }
