@@ -22,7 +22,7 @@ namespace Dessentials.Common
                 {
                     lock (s_locker)
                     {
-                        s_instance = FindObjectOfType<T>();
+                        s_instance = FindFirstObjectByType<T>();
                         if (s_instance == null)
                         {
                             return s_instance;

@@ -154,9 +154,11 @@ Despite six files, only a few extension methods exist: `DImageExtensions`
   `TaichiTracker`, and `TotalAndIncrementalAdRevenueTracker`. Data comes from the
   `_Services/` provider interfaces (`IRevenueDataProvider`, `IWatchAdsAmountProvider`,
   `IAlreadyTrackedEventsProvider`) that the host game implements.
-- **LevelDatabase** — `LevelDatabase<TLeveScriptableObject> : ScriptableObject` (the typo in
-  the type parameter is in the source): name→asset lookup with a fallback level, bulk
-  `ImportLevelsByName` / `ImportBackupLevelsByName`, `RemoveNullEntries`.
+- **LevelDatabase** — abstract `LevelDatabase<TLevel> : ScriptableObject` (a game subclasses it
+  with its level type to make an asset): name → `AssetReferenceT<TLevel>` (`TryGetLevel`,
+  `Contains`), so a remote list of names picks levels without loading them all. No fallback: an
+  unknown name is the caller's to handle. Editor: `ImportLevelsByName`, `ImportLevelsFromList`,
+  `RemoveNullEntries`, and a protected `SetLevels` for a subclass that fills it itself.
 - **QuickAccess** (editor) — `QuickAccessWindow` + config/groups for pinning assets.
 - **Convert Json to Scriptable Objects** (editor) — window driven by `IImportFromJson`.
 - **Fix Object Names** (editor) — renames an asset's main object to match its filename.
