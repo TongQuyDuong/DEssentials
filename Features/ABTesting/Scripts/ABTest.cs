@@ -166,11 +166,22 @@ namespace Dessentials.Features.ABTesting
 	    {
 			var textToCopy = useNewtonsoft
 				? Newtonsoft.Json.JsonConvert.SerializeObject(DefaultValue, RoundedFloatSettings)
-				: RoundJsonFloats(JsonUtility.ToJson(DefaultValue));
+				: RoundJsonFloats(ToJsonUtility(DefaultValue));
 
 			GUIUtility.systemCopyBuffer = textToCopy;
 			Debug.Log("Text copied to clipboard: " + textToCopy);
 		}
+
+	    // JsonUtility.ToJson gives "{}" for a top-level array or list, so write it inside the same Wrapper
+	    // DeserializeComplex reads it with and cut the value back out.
+	    private static string ToJsonUtility(T value)
+	    {
+		    if (!IsCollection) return JsonUtility.ToJson(value);
+
+		    const string prefix = "{\"value\":";
+		    var json = JsonUtility.ToJson(new Wrapper { value = value });
+		    return json.Substring(prefix.Length, json.Length - prefix.Length - 1);
+	    }
 
 	    private const int FLOAT_ROUND_DIGITS = 6;
 
@@ -251,13 +262,12 @@ namespace Dessentials.Features.ABTesting
 	    // JsonUtility can't deserialize a top-level array/list. When T is a collection,
 	    // wrap the json under a field whose type is T itself, then unwrap. No reflection:
 	    // the nested Wrapper closes over T, so the field is already the right type.
+	    private static readonly bool IsCollection = typeof(T).IsArray ||
+		    (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>));
+
 	    private T DeserializeComplex(string json)
 	    {
-		    var type = typeof(T);
-		    bool isCollection = type.IsArray ||
-			    (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>));
-
-		    if (isCollection)
+		    if (IsCollection)
 		    {
 			    var wrapper = JsonUtility.FromJson<Wrapper>("{\"value\":" + json + "}");
 			    return wrapper.value;
